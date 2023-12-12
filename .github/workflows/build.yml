@@ -6,8 +6,9 @@ on:
 jobs:
     test:
         runs-on: ubuntu-latest
-        container: ros:humble-ros-core-jammy
         steps:
             - uses: actions/checkout@v2
-            - name: build
-              run: colcon build
+            - name: build docker container
+              run: docker build -t local < Dockerfile
+            - name: colcon build
+              run: docker run -it local colcon build
