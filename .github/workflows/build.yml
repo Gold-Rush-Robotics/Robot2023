@@ -5,10 +5,10 @@ on:
 
 jobs:
     test:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-latest 
         steps:
             - uses: actions/checkout@v2
             - name: build docker container
-              run: docker build -t local < Dockerfile
+              run: docker buildx build -t local Dockerfile
             - name: colcon build
               run: docker run -it local colcon build
