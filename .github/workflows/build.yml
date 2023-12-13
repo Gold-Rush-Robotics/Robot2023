@@ -11,4 +11,4 @@ jobs:
             - name: build docker container
               run: docker buildx build -t local .
             - name: colcon build
-              run: docker run -it local colcon build
+              run: docker run local colcon build
