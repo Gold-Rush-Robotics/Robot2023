@@ -28,3 +28,7 @@ RUN colcon mixin add default \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-ros-base=0.10.0-1* \
     && rm -rf /var/lib/apt/lists/*
+
+Copy src /src 
+
+WORKDIR /src
