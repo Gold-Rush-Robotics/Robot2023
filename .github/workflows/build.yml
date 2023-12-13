@@ -9,7 +9,6 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - name: build docker container
-              run: docker buildx build -t local Dockerfile
-              working-directory: Robot2023/
+              run: docker buildx build -t local ./Dockerfile
             - name: colcon build
               run: docker run -it local colcon build
