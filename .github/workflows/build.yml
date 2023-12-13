@@ -9,6 +9,6 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - name: build docker container
-              run: docker buildx build -t local ./Dockerfile
+              run: docker buildx build -t local .
             - name: colcon build
               run: docker run -it local colcon build
