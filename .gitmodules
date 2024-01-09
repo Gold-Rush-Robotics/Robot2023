@@ -1,3 +1,0 @@
-[submodule "src/grr_python_hardware/grr_python_hardware/roboclaw_python_library"]
-	path = src/grr_python_hardware/grr_python_hardware/roboclaw_python_library
-	url = https://github.com/c4glenn/roboclaw_python_library.git

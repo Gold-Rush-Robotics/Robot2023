@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'robot = grr_python_hardware.robot:main',
         ],
     },
 )
