@@ -1,4 +1,4 @@
-from roboclaw_python_library.roboclaw_python.roboclaw_3 import Roboclaw
+from grr_roboclaw.roboclaw import Roboclaw
 import rclpy
 from rclpy.node import Node
 
