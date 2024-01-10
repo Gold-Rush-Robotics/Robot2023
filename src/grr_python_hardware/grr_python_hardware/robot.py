@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Bool
 from dataclasses import dataclass
 from ament_index_python.packages import get_package_share_directory
 import yaml
@@ -68,8 +69,13 @@ class Robot(Node):
         self.roboclaw = Roboclaw("/dev/ttyS0", 38400)
         self.roboclaw.Open()
         self.joints: dict[str, Joint] = {}
+        self.state_publisher = self.create_publisher(JointState, "/joint_states", 10)
+        self.state_timer = self.create_timer(1/30, self.state_return_callback)
+        self.refresh_hw_map = self.create_subscription(Bool, "/grr/refresh_hw_map", self.load_hw_map, 10)
+        self.follow_trajectories = self.create_subscription(JointTrajectory, "/grr/command", self.joint_state_follow_subscriber, 10)
         
-    def load_hw_map(self):
+    def load_hw_map(self, data: Bool) -> None:
+        if not data.data: return
         file_dir = get_package_share_directory('grr_python_hardware')
         with open(f"{file_dir}/hardware_map.yaml", "r") as f:
             data = yaml.load(f.read(), yaml.Loader)
@@ -87,6 +93,12 @@ class Robot(Node):
             if not res:
                 self.get_logger().error(f"Attempted to call an unregistered Joint: {name}")
                 
+    def state_return_callback(self) -> None:
+        state = self.build_state_representation()
+        self.state_publisher.publish(state)
+        return state
+        
+                
     def build_state_representation(self) -> JointState:
         joint_state = JointState()
         for joint in self.joints.values():
@@ -102,7 +114,7 @@ class Robot(Node):
 def main():
     rclpy.init()
     robot = Robot()
-    robot.load_hw_map()
+    robot.load_hw_map(Bool(data=True))
     rclpy.spin(robot)
     
     robot.destroy_node()
