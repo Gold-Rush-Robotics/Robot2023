@@ -8,7 +8,9 @@ from dataclasses import dataclass
 from ament_index_python.packages import get_package_share_directory
 import yaml
 from numpy import pi
-import os
+from adafruit_pca9685 import PCA9685
+from board import SCL, SDA
+import busio
 
 
 @dataclass
@@ -19,8 +21,9 @@ class SubState:
     effort: float
 
 class Joint:
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, attachment: int) -> None:
         self.name = name
+        self.attachment = attachment
     def get_state(self) -> SubState:
         return SubState("", 0, 0, 0)
     def follow_state(self, state: JointTrajectoryPoint, index: int) -> bool:
@@ -30,8 +33,7 @@ class Joint:
     
 class Motor(Joint):
     def __init__(self, name: str, attachment: int, rc_addy: int, m1: bool, ticks_per_rev: int, roboclaw: Roboclaw) -> None:
-        super().__init__(name)
-        self.attachment = attachment
+        super().__init__(name, attachment)
         self.rc_addy = rc_addy
         self.m1 = m1
         self.roboclaw = roboclaw
@@ -62,17 +64,38 @@ class Motor(Joint):
             
         
         return True
+    
+class Servo(Joint):
+    def __init__(self, name: str, attachment: int, servo_port: int, maximum_val: int, minimum_val: int, pca:PCA9685) -> None:
+        super().__init__(name, attachment)
+        self.servo_port = servo_port
+        self.maximum_val = maximum_val
+        self.minimum_val = minimum_val
+        self.pca = pca
+        
+    def get_state(self) -> SubState:
+        position = self.pca.channels[self.servo_port].duty_cycle
+        return SubState(self.name, position, 0, 0)
+    
+    def follow_state(self, state: JointTrajectoryPoint, index: int) -> bool:
+        effort = state.effort[index]
+        scaled = (float(effort) / float(100))*0xFFFF
+        self.pca.channels[self.servo_port].duty_cycle = scaled
+        return True
 
 class Robot(Node):
     def __init__(self):
         super().__init__("Robot")
         self.roboclaw = Roboclaw("/dev/ttyS0", 38400)
         self.roboclaw.Open()
+        self.I2C = busio.I2C(SCL, SDA)
         self.joints: dict[str, Joint] = {}
         self.state_publisher = self.create_publisher(JointState, "/joint_states", 10)
         self.state_timer = self.create_timer(1/30, self.state_return_callback)
         self.refresh_hw_map = self.create_subscription(Bool, "/grr/refresh_hw_map", self.load_hw_map, 10)
         self.follow_trajectories = self.create_subscription(JointTrajectory, "/grr/command", self.joint_state_follow_subscriber, 10)
+        
+        
         
     def load_hw_map(self, data: Bool) -> None:
         if not data.data: return
@@ -83,7 +106,8 @@ class Robot(Node):
         for joint in data["joints"]:
             if joint["type"] == "motor":
                 self.joints[joint['name']] = Motor(joint["name"], joint['params']['attachment'], joint['params']['rc_addy'], joint['params']['m1'], joint['params']['ticks_per_rev'], self.roboclaw)       
-        
+            elif joint["type"] == "servo":
+                pass
         for k, v in self.joints.items():
             print(k, v)
 
