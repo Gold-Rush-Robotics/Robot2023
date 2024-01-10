@@ -27,5 +27,14 @@ joints:
       rc_addy: 132
       m1: no
       ticks_per_rev: 6533
+  - name: bridge_release
+    type: servo
+    params:
+      attachment: 2
+      servo_port: 0
+      PCA_address: 0x40
+      maximum_value: 0xFFFF
+      minimum_value: 0x0000
+      
 
 
