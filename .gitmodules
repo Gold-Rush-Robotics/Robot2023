@@ -1,0 +1,3 @@
+[submodule "grr_roboclaw"]
+	path = grr_roboclaw
+	url = git@github.com:Gold-Rush-Robotics/RoboClawLibrary.git
