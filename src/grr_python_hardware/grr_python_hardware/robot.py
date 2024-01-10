@@ -6,7 +6,9 @@ from sensor_msgs.msg import JointState
 from dataclasses import dataclass
 from ament_index_python.packages import get_package_share_directory
 import yaml
+from numpy import pi
 import os
+
 
 @dataclass
 class SubState:
@@ -15,11 +17,41 @@ class SubState:
     velocity: float
     effort: float
 
-class Joint:    
+class Joint:
+    def __init__(self, name: str) -> None:
+        self.name = name
     def get_state(self) -> SubState:
-        pass
+        return SubState("", 0, 0, 0)
     def follow_state(self, state: JointTrajectoryPoint) -> bool:
         return False
+    def __str__(self) -> str:
+        return f"Joint of type {__name__}"
+    
+class Motor(Joint):
+    def __init__(self, name: str, attachment: int, rc_addy: int, m1: bool, ticks_per_rev: int, roboclaw: Roboclaw) -> None:
+        super().__init__(name)
+        self.attachment = attachment
+        self.rc_addy = rc_addy
+        self.m1 = m1
+        self.roboclaw = roboclaw
+        self.ticks_per_rev = ticks_per_rev
+    
+    def get_state(self) -> SubState:
+        if self.ticks_per_rev != 0:
+            position = self.roboclaw.ReadEncM1(self.rc_addy)[1] if self.m1 else self.roboclaw.ReadEncM2(self.rc_addy)[1]
+            position = (position / self.ticks_per_rev) * 2 * pi
+            velocity = self.roboclaw.ReadSpeedM1(self.rc_addy)[1] if self.m1 else self.roboclaw.ReadSpeedM2(self.rc_addy)[1]
+        else:
+            position = 0
+            velocity = 0
+        effort = self.roboclaw.ReadCurrents(self.rc_addy)[1 if self.m1 else 2]
+        effort /= self.roboclaw.ReadM1MaxCurrent(self.rc_addy)[1] if self.m1 else self.roboclaw.ReadM2MaxCurrent(self.rc_addy)[1] 
+        return SubState(self.name, position, velocity, effort)
+
+    def __str__(self) -> str:
+        return super().__str__() + f" named: {self.name} @ {self.rc_addy} {'m1' if self.m1 else 'm2'} on attachment {self.attachment} w/ {self.ticks_per_rev} t/r"
+    
+    
 
 class Robot(Node):
     def __init__(self):
@@ -30,16 +62,19 @@ class Robot(Node):
         
     def load_hw_map(self):
         file_dir = get_package_share_directory('grr_python_hardware')
-
-        print(file_dir)
         with open(f"{file_dir}/hardware_map.yaml", "r") as f:
             data = yaml.load(f.read(), yaml.Loader)
             
-            print(data)
+        for joint in data["joints"]:
+            if joint["type"] == "motor":
+                self.joints[joint['name']] = Motor(joint["name"], joint['params']['attachment'], joint['params']['rc_addy'], joint['params']['m1'], joint['params']['ticks_per_rev'], self.roboclaw)       
         
+        for k, v in self.joints.items():
+            print(k, v)
+
     def joint_state_follow_subscriber(self, data: JointTrajectory) -> None:
         for i, name in enumerate(data.joint_names):
-            res = self.joints.get(name, Joint()).follow_state(data.points[i])
+            res = self.joints.get(name, Joint(name)).follow_state(data.points[i])
             if not res:
                 self.get_logger().error(f"Attempted to call an unregistered Joint: {name}")
                 
