@@ -22,7 +22,7 @@ class Joint:
         self.name = name
     def get_state(self) -> SubState:
         return SubState("", 0, 0, 0)
-    def follow_state(self, state: JointTrajectoryPoint) -> bool:
+    def follow_state(self, state: JointTrajectoryPoint, index: int) -> bool:
         return False
     def __str__(self) -> str:
         return f"Joint of type {__name__}"
@@ -51,7 +51,16 @@ class Motor(Joint):
     def __str__(self) -> str:
         return super().__str__() + f" named: {self.name} @ {self.rc_addy} {'m1' if self.m1 else 'm2'} on attachment {self.attachment} w/ {self.ticks_per_rev} t/r"
     
-    
+    def follow_state(self, state: JointTrajectoryPoint, index: int) -> bool:
+        if self.ticks_per_rev != 0:
+            buffer = ""
+            self.roboclaw.SpeedAccelDistanceM1(self.rc_addy, state.accelerations[index], state.velocities[index], state.positions[index], buffer)
+        else:
+                            
+            self.roboclaw.SpeedM1(self.rc_addy, state.effort[index]) if self.m1 else self.roboclaw.SpeedM2(self.rc_addy, state.effort[index])
+            
+        
+        return True
 
 class Robot(Node):
     def __init__(self):
@@ -74,7 +83,7 @@ class Robot(Node):
 
     def joint_state_follow_subscriber(self, data: JointTrajectory) -> None:
         for i, name in enumerate(data.joint_names):
-            res = self.joints.get(name, Joint(name)).follow_state(data.points[i])
+            res = self.joints.get(name, Joint(name)).follow_state(data.points[i], i)
             if not res:
                 self.get_logger().error(f"Attempted to call an unregistered Joint: {name}")
                 
