@@ -89,6 +89,7 @@ class Robot(Node):
         self.roboclaw = Roboclaw("/dev/ttyS0", 38400)
         self.roboclaw.Open()
         self.I2C = busio.I2C(SCL, SDA)
+        self.PCAs = {}
         self.joints: dict[str, Joint] = {}
         self.state_publisher = self.create_publisher(JointState, "/joint_states", 10)
         self.state_timer = self.create_timer(1/30, self.state_return_callback)
@@ -104,10 +105,18 @@ class Robot(Node):
             data = yaml.load(f.read(), yaml.Loader)
             
         for joint in data["joints"]:
+            
+            if joint['name'] in self.joints.keys():
+                self.get_logger().error("tried to register a joint that already exists")
+                continue
+            
             if joint["type"] == "motor":
                 self.joints[joint['name']] = Motor(joint["name"], joint['params']['attachment'], joint['params']['rc_addy'], joint['params']['m1'], joint['params']['ticks_per_rev'], self.roboclaw)       
             elif joint["type"] == "servo":
-                pass
+                pca_addy = joint['params']['PCA_address']
+                self.PCAs[pca_addy] = self.PCAs.get(pca_addy, PCA9685(self.I2C, address=pca_addy))
+                self.joints[joint['name']] = Servo(joint['name'], joint['params']['attachment'], joint['params']['servo_port'], joint['params']['maximum_value'], joint['params']['minimum_value'], self.PCAs[joint['params'][pca_addy]])
+                
         for k, v in self.joints.items():
             print(k, v)
 
