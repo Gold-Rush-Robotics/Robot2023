@@ -10,7 +10,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name, ['resource/hardware_map.yaml'])
+        ('lib/' + package_name, [package_name+'/joints.py'])
+        
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -22,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'robot = grr_python_hardware.robot:main',
+            '_ = grr_python_hardware.joints:main'
         ],
     },
 )

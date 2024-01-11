@@ -32,14 +32,16 @@ class Motor(Joint):
     
     def get_state(self) -> SubState:
         if self.ticks_per_rev != 0:
-            position = self.roboclaw.ReadEncM1(self.rc_addy)[1] if self.m1 else self.roboclaw.ReadEncM2(self.rc_addy)[1]
+            #if self.m1:
+                #print(self.roboclaw.ReadEncM1(self.rc_addy))
+            #position = self.roboclaw.ReadEncM1(self.rc_addy)[1] if self.m1 else self.roboclaw.ReadEncM2(self.rc_addy)[1]
             position = (position / self.ticks_per_rev) * 2 * pi
             velocity = self.roboclaw.ReadSpeedM1(self.rc_addy)[1] if self.m1 else self.roboclaw.ReadSpeedM2(self.rc_addy)[1]
         else:
             position = 0
             velocity = 0
-        effort = self.roboclaw.ReadCurrents(self.rc_addy)[1 if self.m1 else 2]
-        effort /= self.roboclaw.ReadM1MaxCurrent(self.rc_addy)[1] if self.m1 else self.roboclaw.ReadM2MaxCurrent(self.rc_addy)[1] 
+        effort = self.roboclaw.ReadCurrents(self.rc_addy)[1 if self.m1 else 2]        
+        effort /= 5
         return SubState(self.name, position, velocity, effort*100)
 
     def __str__(self) -> str:
@@ -73,3 +75,6 @@ class Servo(Joint):
         scaled = (float(effort) / float(100))*0xFFFF
         self.pca.channels[self.servo_port].duty_cycle = scaled
         return True
+    
+def main():
+    pass

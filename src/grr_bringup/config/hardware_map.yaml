@@ -3,28 +3,28 @@ joints:
     type: motor
     params:
       attachment: 0
-      rc_addy: 131
+      rc_addy: 129
       m1: yes
       ticks_per_rev: 6533
   - name: front_right
     type: motor
     params:
       attachment: 0
-      rc_addy: 131
+      rc_addy: 129
       m1: no
       ticks_per_rev: 6533
   - name: back_left
     type: motor
     params:
       attachment: 0
-      rc_addy: 132
+      rc_addy: 130
       m1: yes
       ticks_per_rev: 6533
   - name: back_right
     type: motor
     params:
       attachment: 0
-      rc_addy: 132
+      rc_addy: 130
       m1: no
       ticks_per_rev: 6533
   - name: bridge_release

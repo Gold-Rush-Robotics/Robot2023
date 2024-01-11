@@ -47,7 +47,8 @@ class Robot(Node):
             elif joint["type"] == "servo":
                 pca_addy = joint['params']['PCA_address']
                 self.PCAs[pca_addy] = self.PCAs.get(pca_addy, PCA9685(self.I2C, address=pca_addy))
-                self.joints[joint['name']] = Servo(joint['name'], joint['params']['attachment'], joint['params']['servo_port'], joint['params']['maximum_value'], joint['params']['minimum_value'], self.PCAs[joint['params'][pca_addy]])
+                print(self.PCAs)
+                self.joints[joint['name']] = Servo(joint['name'], joint['params']['attachment'], joint['params']['servo_port'], joint['params']['maximum_value'], joint['params']['minimum_value'], self.PCAs[pca_addy])
                 
         for k, v in self.joints.items():
             print(k, v)
