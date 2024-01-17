@@ -1,0 +1,3 @@
+[submodule "roboclaw_cpp_library"]
+	path = roboclaw_cpp_library
+	url = https://github.com/Gold-Rush-Robotics/roboclaw_cpp_library
