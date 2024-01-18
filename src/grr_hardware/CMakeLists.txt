@@ -5,16 +5,32 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+include_directories(
+  include
+  /robotics/bcm2835-1.73/
+  ${colcon_INCLUDE_DIRS}
+)
+
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
-
 add_executable(robot src/robot.cpp)
 
 ament_target_dependencies(robot rclcpp std_msgs sensor_msgs)
+
+target_link_libraries(robot -lbcm2835)
+
+
+
+add_library(
+  ${PROJECT_NAME} SHARED
+  src/I2C.cpp
+  src/I2C.cpp
+)
 
 install(TARGETS
   robot
