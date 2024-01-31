@@ -24,12 +24,10 @@ ament_target_dependencies(robot rclcpp std_msgs sensor_msgs)
 
 target_link_libraries(robot -lbcm2835)
 
-
-
 add_library(
   ${PROJECT_NAME} SHARED
-  src/I2C.cpp
-  src/I2C.cpp
+  #rc/I2C.cpp
+  src/backcolorsensor.cpp
 )
 
 install(TARGETS

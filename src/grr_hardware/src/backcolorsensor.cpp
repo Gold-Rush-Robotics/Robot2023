@@ -1,4 +1,5 @@
-#include "backcolorsensor.h"
+#include "../include/backcolorsensor.h"
+#include "bcm2835.h"
 
 #define TCS34725_ENABLE     (0x00)    /**< Interrupt Enable register */
 #define TCS34725_ENABLE_PON (0x01)    /**< Power on - Writing 1 activates the internal oscillator, 0 disables it */
@@ -9,8 +10,10 @@
 #define TCS34725_GDATAL (0x18) /**< Green channel data low byte */
 #define TCS34725_BDATAL (0x1A) /**< Blue channel data low byte */
 
+// g++ backcolorsensor.cpp I2C.cpp -o colorsenseTest -l bcm2835
+
 ColorSensor::ColorSensor() {
-    addr = 0x32;
+    addr = 0x29;
     green_threshold = 128;
 }
 
@@ -18,7 +21,9 @@ void ColorSensor::write8(uint8_t reg, uint8_t value) {
 //   uint8_t buffer[2] = {(uint8_t)(TCS34725_COMMAND_BIT | reg), value};
 //   i2c_dev->write(buffer, 2);
     uint8_t *source = &value;
-    if(!I2C::writeRegisters(addr, reg, source, 1))
+    bool val = I2C::writeRegisters(0x29, reg, source, sizeof(source));
+    
+    if(!val)
         std::cout << "Failed to Write 8 -- colorsensor.cpp" << std::endl; 
 }
 
@@ -48,19 +53,25 @@ uint16_t ColorSensor::read16(uint8_t reg) {
 //   i2c_dev->write_then_read(buffer, 1, buffer, 2);
 //   return (uint16_t(buffer[1]) << 8) | (uint16_t(buffer[0]) & 0xFF);
     uint8_t *dst;
-    if(I2C::readRegisters(addr, reg, 2, dst))
+    bool a = I2C::readRegisters(addr, reg, 2, dst);
+    std::cout << std::to_string(a) << "reg read:" << dst << std::endl;
+    if(a){
         return *dst;
-    else
+    }
+    else{
         return 0x0000;
+    }
 }
 
 /*!
  *  @brief  Enables the device
  */
 void ColorSensor::enable() {
-  write8(TCS34725_ENABLE, TCS34725_ENABLE_PON);
+    std::cout << "enable" << std::endl;
+    write8(TCS34725_ENABLE, TCS34725_ENABLE_PON);
 //   delay(3);
-  write8(TCS34725_ENABLE, TCS34725_ENABLE_PON | TCS34725_ENABLE_AEN);
+    write8(TCS34725_ENABLE, TCS34725_ENABLE_PON | TCS34725_ENABLE_AEN);
+    std::cout << "enabled" << std::endl;
   /* Set a delay for the integration time.
     This is only necessary in the case where enabling and then
     immediately trying to read values back. This is because setting
@@ -97,7 +108,10 @@ void ColorSensor::getRawData(uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *c)
 //     begin();
 
     *c = read16(TCS34725_CDATAL);
+    std::cout << c << std::endl;
+
     *r = read16(TCS34725_RDATAL);
+
     *g = read16(TCS34725_GDATAL);
     *b = read16(TCS34725_BDATAL);
 
@@ -135,6 +149,7 @@ void ColorSensor::getRawDataOneShot(uint16_t *r, uint16_t *g, uint16_t *b, uint1
  *          Blue value normalized to 0-255
  */
 void ColorSensor::getRGB(float *r, float *g, float *b) {
+    std::cout << "get RGB start" << std::endl;
     uint16_t red, green, blue, clear;
     getRawData(&red, &green, &blue, &clear);
     uint32_t sum = clear;
@@ -152,11 +167,29 @@ void ColorSensor::getRGB(float *r, float *g, float *b) {
 
 bool ColorSensor::is_start_light()
 {
+    std::cout << "start" << std::endl;
     float red, green, blue;
+
     getRGB(&red, &green, &blue);
+
+    std::cout << "after rgb R: " << std::to_string(red) << " G:" << std::to_string(green) << " B:" << std::to_string(blue) << std::endl;
 
     if (green > green_threshold)
         return true;
     
     return false;
+}
+
+int main(int argc, char * argv[]){
+    int a = bcm2835_init();
+    std::cout << a << std::endl;
+    if(!bcm2835_i2c_begin()){
+        std::cout << "Program not run as root" << std::endl;
+    }
+    std::cout << "Here?" << std::endl;
+    ColorSensor* cs = new ColorSensor();
+    std::cout << cs->is_start_light() << std::endl;
+    
+    bcm2835_close();
+    return 0;
 }
