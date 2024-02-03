@@ -22,9 +22,9 @@ class Robot(Node):
         self.line_array = SEN13582(self.i2c)
         
     def line_array_timer(self):
-        bits = self.line_array.scan()
-        self.get_logger().info(f"Line array: {bin(bits)}")
-
+        byte = self.line_array.scan()
+        bits = [x == "1" for x in str(byte)[2:-1]]        
+        print(bits)
         
     
     def start_light_checker(self):
