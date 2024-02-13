@@ -1,7 +1,7 @@
 robot:
   ros__parameters:
     pca_address: 0x40
-    pca_frequency: 50
+    pca_frequency: 600
     servo_mapping:
       link_name:
         port: 0

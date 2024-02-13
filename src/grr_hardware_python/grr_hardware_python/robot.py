@@ -50,6 +50,7 @@ class Robot(Node):
 
     def connect_to_pca(self, i2c:I2C):
         self.pca = PCA9685(i2c, address=self.PCA_ADDY)
+        self.pca.pca_frequency = self.PCA_FREQ
     
     def joint_command_callback(self, data:JointState):
         for i, name in enumerate(data.name):
@@ -70,7 +71,7 @@ class Robot(Node):
             self.get_logger().info(f"Spinning servo: {self.servo_mapping[name]['port']} to duty cycle: {duty_cycle}")
 
             
-            self.pca.channels[self.servo_mapping[name]['port']].duty_cycle = duty_cycle
+            self.pca.channels[self.servo_mapping[name]['port']].duty_cycle = int(duty_cycle)
 
 def main():
     rclpy.init()
