@@ -29,6 +29,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-ros-base=0.10.0-1* \
     && rm -rf /var/lib/apt/lists/*
 
-Copy src /src 
+COPY src /workspace/src 
 
-WORKDIR /src
+WORKDIR /workspace
