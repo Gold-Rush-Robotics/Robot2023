@@ -8,23 +8,26 @@ from adafruit_pca9685 import PCA9685
 
 from sensor_msgs.msg import JointState
 
+from rcl_interfaces.msg import SetParametersResult
+
+
 class Robot(Node):
     def __init__(self) -> None:
         super().__init__("robot")
         self.i2c = I2C(SCL, SDA)
 
-        self.links = ["link_name"]
+        self.servo_joint_names = ["bridge_latch_joint", "mechanism_lift_joint", "mechanism_package_joint", "mechanism_thruster_joint", "small_package_sweeper_joint"]
         params = [
             ('pca_address', 0x40),
             ('pca_frequency', 50)
         ]
         self.servo_mapping = {}
         
-        for link in self.links:
-            params.append((f'servo_mapping.{link}.port', 0))
-            params.append((f'servo_mapping.{link}.maximum', 0xFFFF))
-            params.append((f'servo_mapping.{link}.minimum', 0x0001))
-            self.servo_mapping[link] = {}
+        for joint_name in self.servo_joint_names:
+            params.append((f'servo_mapping.{joint_name}.port', 15))
+            params.append((f'servo_mapping.{joint_name}.maximum', 1))
+            params.append((f'servo_mapping.{joint_name}.minimum', 0))
+            self.servo_mapping[joint_name] = {}
         
         self.declare_parameters(
             namespace='',
@@ -37,20 +40,29 @@ class Robot(Node):
         self.connect_to_pca(self.i2c)
         
         self.get_logger().info(f'servo mapping: {self.servo_mapping}')
-        
-        self.joint_state_subscriber = self.create_subscription(JointState, "joint_command", self.joint_command_callback, 10)
+    
+        self.add_on_set_parameters_callback(self.parameters_callback)
+    
+        self.joint_state_subscriber = self.create_subscription(JointState, "/grr/joint_command", self.joint_command_callback, 10)
+    
+    def parameters_callback(self, params):
+        self.get_logger().info(f"{params}")
+        return SetParametersResult(successful=True)
+
+    
     
     def load_parameters(self):
         self.PCA_ADDY = self.get_parameter('pca_address').get_parameter_value().integer_value
         self.PCA_FREQ = self.get_parameter('pca_frequency').get_parameter_value().integer_value
-        for link in self.links:
-            self.servo_mapping[link]['port'] = self.get_parameter(f'servo_mapping.{link}.port').get_parameter_value().integer_value
-            self.servo_mapping[link]['maximum'] = self.get_parameter(f'servo_mapping.{link}.maximum').get_parameter_value().integer_value
-            self.servo_mapping[link]['minimum'] = self.get_parameter(f'servo_mapping.{link}.minimum').get_parameter_value().integer_value
+        self.get_logger().info(f"ADDY: {self.PCA_ADDY} FREQ: {self.PCA_FREQ}")
+        for joint_name in self.servo_joint_names:
+            self.servo_mapping[joint_name]['port'] = self.get_parameter(f'servo_mapping.{joint_name}.port').get_parameter_value().integer_value
+            self.servo_mapping[joint_name]['maximum'] = self.get_parameter(f'servo_mapping.{joint_name}.maximum').get_parameter_value().integer_value
+            self.servo_mapping[joint_name]['minimum'] = self.get_parameter(f'servo_mapping.{joint_name}.minimum').get_parameter_value().integer_value
 
     def connect_to_pca(self, i2c:I2C):
         self.pca = PCA9685(i2c, address=self.PCA_ADDY)
-        self.pca.pca_frequency = self.PCA_FREQ
+        self.pca.frequency = self.PCA_FREQ
     
     def joint_command_callback(self, data:JointState):
         for i, name in enumerate(data.name):
@@ -68,7 +80,7 @@ class Robot(Node):
                         
             duty_cycle = (((effort - old_min) * new_range)/old_range)+new_min
             
-            self.get_logger().info(f"Spinning servo: {self.servo_mapping[name]['port']} to duty cycle: {duty_cycle}")
+            self.get_logger().info(f"Spinning servo: {self.servo_mapping[name]['port']} to duty cycle: {duty_cycle} at frequency {self.pca.frequency}")
 
             
             self.pca.channels[self.servo_mapping[name]['port']].duty_cycle = int(duty_cycle)

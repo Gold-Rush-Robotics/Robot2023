@@ -15,6 +15,8 @@ def generate_launch_description():
         'config',
         'servo_params.yaml'
     )
+    
+    print(f"HELLO {servo_params}")
     ld = LaunchDescription()
     
     ld.add_action(
