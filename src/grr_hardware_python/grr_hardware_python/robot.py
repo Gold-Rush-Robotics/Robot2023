@@ -7,9 +7,9 @@ from busio import I2C
 from adafruit_pca9685 import PCA9685
 
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Int64MultiArray
 
 from rcl_interfaces.msg import SetParametersResult
-from grr_interfaces.msg import LineArray
 
 import math
 import time
@@ -60,7 +60,7 @@ class Robot(Node):
         
         self.line_follower = Line_Follower(self.i2c)
         self.line_timer = self.create_timer(1/30, self.line_array)
-        self.line_publisher = self.create_publisher(LineArray, '/lineArray', 10)
+        self.line_publisher = self.create_publisher(Int64MultiArray, '/lineArray', 10)
 
         self.servo_joint_names = ["bridge_latch_joint", "mechanism_lift_joint", "mechanism_package_joint", "mechanism_thruster_joint", "small_package_sweeper_joint"]
         params = [
@@ -131,7 +131,7 @@ class Robot(Node):
             
     def line_array(self):
         vals = self.line_follower.read_analog()
-        self.line_publisher.publish( LineArray(data=vals))
+        self.line_publisher.publish(Int64MultiArray(deta=vals))
         
 
 def main():
