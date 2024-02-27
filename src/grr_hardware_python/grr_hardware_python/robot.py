@@ -131,7 +131,7 @@ class Robot(Node):
             
     def line_array(self):
         vals = self.line_follower.read_analog()
-        self.line_publisher.publish(Int64MultiArray(deta=vals))
+        self.line_publisher.publish(Int64MultiArray(data=vals))
         
 
 def main():
