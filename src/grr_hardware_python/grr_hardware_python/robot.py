@@ -5,9 +5,12 @@ from board import SCL, SDA
 from busio import I2C
 
 from adafruit_pca9685 import PCA9685
+from adafruit_tca9548a import TCA9548A
+from adafruit_tcs34725 import TCS34725
+
 
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Int64MultiArray
+from std_msgs.msg import Int64MultiArray, Bool
 
 from rcl_interfaces.msg import SetParametersResult
 
@@ -57,6 +60,14 @@ class Robot(Node):
     def __init__(self) -> None:
         super().__init__("robot")
         self.i2c = I2C(SCL, SDA)
+        
+        self.tca = TCA9548A(self.i2c)
+        
+        self.start_light_timer = self.create_timer(.1, self.start_light_checker)
+        self.back_sensor = TCS34725(self.tca[1])
+
+        self.start_light_publisher = self.create_publisher(Bool, "/grr/start_light", 10)        
+        self.declare_parameter('LED_Threshold', 100)
         
         self.line_follower = Line_Follower(self.i2c)
         self.line_timer = self.create_timer(1/30, self.line_array)
@@ -132,6 +143,16 @@ class Robot(Node):
     def line_array(self):
         vals = self.line_follower.read_analog()
         self.line_publisher.publish(Int64MultiArray(data=vals))
+        
+    def start_light_checker(self):
+        threshold = self.get_parameter('LED_Threshold').get_parameter_value().integer_value
+        color_rgb = self.back_sensor.color_rgb_bytes
+        msg = Bool()
+        msg.data = color_rgb[0] >= threshold
+        self.start_light_publisher.publish(msg)
+        """ if msg.data:
+            self.start_light_timer.destroy() """
+
         
 
 def main():
