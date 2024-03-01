@@ -64,11 +64,9 @@ class Robot(Node):
         self.tca = TCA9548A(self.i2c)
         
         self.start_light_timer = self.create_timer(.1, self.start_light_checker)
-        self.back_sensor = TCS34725(self.tca.channels[0])
+        self.back_sensor = TCS34725(self.tca[1])
 
-        self.start_light_publisher = self.create_publisher(Bool, "/grr/start_light", 10)
-        self.line_array_timer = self.create_timer(.1, self.line_array_timer)
-        
+        self.start_light_publisher = self.create_publisher(Bool, "/grr/start_light", 10)        
         self.declare_parameter('LED_Threshold', 100)
         
         self.line_follower = Line_Follower(self.i2c)
@@ -149,7 +147,6 @@ class Robot(Node):
     def start_light_checker(self):
         threshold = self.get_parameter('LED_Threshold').get_parameter_value().integer_value
         color_rgb = self.back_sensor.color_rgb_bytes
-        self.get_logger().info(f"Color: {color_rgb}")
         msg = Bool()
         msg.data = color_rgb[0] >= threshold
         self.start_light_publisher.publish(msg)
