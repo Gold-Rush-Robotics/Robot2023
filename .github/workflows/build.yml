@@ -12,6 +12,8 @@ jobs:
               run: docker buildx build -t local .
             # - name: rosdep init and update
             #   run: docker run local apt update && rosdep init && rosdep update
+            - name: source ros2
+              run: docker run local /bin/bash -c "source /opt/ros/humble/setup.bash"
             - name: rosdep install
               run: docker run local rosdep install --from-paths src -y --ignore-src --rosdistro humble
             - name: colcon build
