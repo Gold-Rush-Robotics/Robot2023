@@ -20,7 +20,7 @@ def generate_launch_description():
     robot_description_config = xacro.process_file(xacro_file)
     robot_description_xml = robot_description_config.toxml()
     print(robot_description_xml)
-    source_code_path = os.path.abspath(os.path.join(description_pkg_path, "../../../../src/grr_description"))
+    source_code_path = os.path.abspath(os.path.join(description_pkg_path, "../../../../src/Robot2023/src/grr_description"))
     urdf_save_path = os.path.join(source_code_path, "bloodstone.urdf")
 
     with open(urdf_save_path, 'w') as f:
@@ -119,6 +119,6 @@ def generate_launch_description():
         joint_state_broadcaster_spawner,
         mecanum_drive_controller_delay,
         # rviz2_delay,
-        # joy,
-        # joy_teleop
+        joy,
+        joy_teleop
     ])
