@@ -4,6 +4,8 @@ import numpy as np
 
 from geometry_msgs.msg import Twist, Pose
 from std_msgs.msg import Bool, Float32
+from sensor_msgs.msg import JointState
+from nav_msgs.msg import Odometry
 
 class PIDcontroller:
 
@@ -38,9 +40,6 @@ class PIDcontroller:
         #return
         return control_signal
 
-
-
-
 class DriveTrain(Node):
     
     #Constructor
@@ -48,13 +47,13 @@ class DriveTrain(Node):
         super().__init__('DriveTrain')
 
         # Define publishers
-        self.velocity_publisher = self.create_publisher(Twist, "grr_cmake_controller/cmd_vel_unstamped", dt)
+        self.velocity_publisher = self.create_publisher(Twist, "grr_cmake_controller/cmd_vel_unstamped", 10)
         # TODO: Does a publisher have to have a hz rate? Like can I just publish when I want? Will publish true for this constantly mess up future trips?
-        self.arrival_publisher = self.create_publisher(Bool, "arrived_at_goal", dt)
+        self.arrival_publisher = self.create_publisher(Bool, "arrived_at_goal", 10)
 
         # Define subscribers
-        self.odom_subscriber = self.create_subscription(Pose, "odom", self.getOdom, dt)
-        self.goal_subscriber = self.create_subscription(Pose, "goal", self.getGoal, dt)
+        self.odom_subscriber = self.create_subscription(Odometry, "odom", self.getOdom, 10)
+        self.goal_subscriber = self.create_subscription(Pose, "goal", self.getGoal, 10)
 
         # Define Current pose parameters
         self.currentPose = Pose()
@@ -81,7 +80,8 @@ class DriveTrain(Node):
 
 
     # gets the current odometry of the robot
-    def getOdom(self, odom):
+    def getOdom(self, odom: Odometry):
+        odom = odom.pose.pose
         self.currentPose.position.x = odom.position.x
         self.currentPose.position.y = odom.position.y
         self.currentPose.orientation.w = odom.orientation.w
@@ -90,7 +90,7 @@ class DriveTrain(Node):
 
 
     # Update goal of the drive train
-    def getGoal(self, goal) -> None:
+    def getGoal(self, goal: Pose) -> None:
 
 
         
@@ -152,9 +152,9 @@ class DriveTrain(Node):
 
     # Converts Quaternions to Euler angles
     # So we don't really care about most of the Quaternion because we are only going to rotate about the Z axis
-    def quatToEuler(self, odom):
-        QW = odom.orientation.w
-        QZ = odom.orientation.z
+    def quatToEuler(self, pose: Pose):
+        QW = pose.orientation.w
+        QZ = pose.orientation.z
 
         SyCp = 2 * (QW * QZ)
         CyCp = 1 - (2 * (QZ * QZ))
