@@ -19,7 +19,8 @@ setup(
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
+        'console_scripts':[ 
+        	'drivetrain = grr_python_controllers.grr_drive_train:main'
         ],
     },
 )
