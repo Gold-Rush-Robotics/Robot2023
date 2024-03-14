@@ -7,9 +7,11 @@ from busio import I2C
 from adafruit_pca9685 import PCA9685
 from adafruit_tca9548a import TCA9548A
 from adafruit_tcs34725 import TCS34725
+from adafruit_vl6180x import VL6180X
 
 
-from sensor_msgs.msg import JointState
+
+from sensor_msgs.msg import JointState, LaserScan
 from std_msgs.msg import Int64MultiArray, Bool
 
 from rcl_interfaces.msg import SetParametersResult
@@ -63,15 +65,19 @@ class Robot(Node):
         
         self.tca = TCA9548A(self.i2c)
         
-        self.start_light_timer = self.create_timer(.1, self.start_light_checker)
+        self.sensor_loop_timer = self.create_timer(.1, self.sensor_loop)
+        
         self.back_sensor = TCS34725(self.tca[1])
-
-        self.start_light_publisher = self.create_publisher(Bool, "/grr/start_light", 10)        
+        self.start_light_publisher = self.create_publisher(Bool, "/grr/start_light", 10) 
         self.declare_parameter('LED_Threshold', 100)
+        
+        self.down_tof = VL6180X(self.tca[0])
+        self.down_tof_pub = self.create_publisher(LaserScan, "/grr/down_tof", 10)
         
         self.line_follower = Line_Follower(self.i2c)
         self.line_timer = self.create_timer(1/30, self.line_array)
         self.line_publisher = self.create_publisher(Int64MultiArray, '/lineArray', 10)
+        
 
         self.servo_joint_names = ["bridge_latch_joint", "mechanism_lift_joint", "mechanism_package_joint", "mechanism_thruster_joint", "small_package_sweeper_joint"]
         params = [
@@ -144,14 +150,17 @@ class Robot(Node):
         vals = self.line_follower.read_analog()
         self.line_publisher.publish(Int64MultiArray(data=vals))
         
-    def start_light_checker(self):
+    def sensor_loop(self):
         threshold = self.get_parameter('LED_Threshold').get_parameter_value().integer_value
         color_rgb = self.back_sensor.color_rgb_bytes
         msg = Bool()
         msg.data = color_rgb[0] >= threshold
         self.start_light_publisher.publish(msg)
-        """ if msg.data:
-            self.start_light_timer.destroy() """
+        
+        tof_msg = LaserScan(range_min=.005,range_max=.1)
+        tof_msg.ranges = [self.down_tof.range / 1000]
+        self.down_tof_pub.publish(tof_msg)
+    
 
         
 
