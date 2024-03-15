@@ -48,7 +48,16 @@ class StateMachine(Node):
 
     # Checks to see if the light is green or not 
     def green_light_callback(self, msg):
-        if(msg == "GREEN"):
-            
-            
+        self.light = msg
 
+
+def main():
+
+    rclpy.init()
+    Renwick = StateMachine(10)
+    rclpy.spin(StateMachine)
+
+
+
+if __name__ == '__main__':
+    main()

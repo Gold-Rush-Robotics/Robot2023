@@ -11,13 +11,23 @@ from trajectory_msgs.msg import JointTrajectory
 from std_msgs.msg import Bool, Float32
 
 
-class Action:
-    nextAction : Action
+class action:
+    nextAction : action
 
     def __init__(self) -> None:
         pass
 
-    def setNext(self, nextAction: Action):
+    def setNext(self, nextAction: action):
         nextAction.nextAction = self.nextAction
         self.nextAction = nextAction
+        return self.nextAction
+    
+    def setLast(self, lastAction: action):
+        if(self.nextAction):
+            return self.nextAction.setLast(lastAction)
+        else:
+            self.nextAction = lastAction
+            return self.nextAction
+        
+    def run(self):
         return self.nextAction
