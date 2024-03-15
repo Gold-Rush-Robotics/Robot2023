@@ -11,7 +11,7 @@ class GRR_Window(QMainWindow):
         super().__init__()
         
         self.setWindowTitle("GRR SECON APP")
-        self.button = QPushButton("Ready to start? No")
+        self.button = QPushButton("Ready to start? No ")
         self.button.setCheckable(True)
         
         self.label = QLabel()
@@ -21,8 +21,9 @@ class GRR_Window(QMainWindow):
         self.node_list = QListWidget()
         
         main_pane = QVBoxLayout()
-        main_pane.addWidget(self.button)
         main_pane.addWidget(self.label)
+        main_pane.addWidget(self.button)
+    
         horiz_layout.addLayout(main_pane)
         horiz_layout.addWidget(self.node_list)
         
@@ -47,7 +48,7 @@ class Gui(Node):
         self.window.button.clicked.connect(self.send_test)
         
     def send_test(self, checked):
-        self.window.button.setText(f"Ready to Start? {'Yes' if checked else 'No'}")
+        self.window.button.setText(f"Ready to Start? {'Yes' if checked else 'No '}")
         self.test_publisher.publish(Bool(data=checked))
     
     def display_test(self, msg:String):
@@ -56,7 +57,7 @@ class Gui(Node):
         
     def gui_loop(self):
         self.app.processEvents(flags=QEventLoop.ProcessEventsFlag.AllEvents)     
-        nodes = [y +"/"+ x for x,y in self.get_node_names_and_namespaces()]
+        nodes = [((y + "/") if not y  == "/" else "/") + x for x,y in self.get_node_names_and_namespaces()]
         if not nodes == self.previous_nodes:
             self.window.node_list.clear()
             self.window.node_list.addItems(nodes)
