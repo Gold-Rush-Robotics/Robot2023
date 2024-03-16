@@ -43,7 +43,7 @@ class PIDcontroller:
 class DriveTrain(Node):
     
     #Constructor
-    def __init__(self, tPID, rPID, dt) -> None:
+    def __init__(self, xPID, yPID, rPID, dt) -> None:
         super().__init__('DriveTrain')
 
         # Define publishers
@@ -53,7 +53,9 @@ class DriveTrain(Node):
 
         # Define subscribers
         self.odom_subscriber = self.create_subscription(Odometry, "odom", self.getOdom, 10)
-        self.goal_subscriber = self.create_subscription(Pose, "goal", self.getGoal, 10)
+        self.goal_subscriber = self.create_subscription(Pose, "/drivetrain/goal", self.getGoal, 10)
+        
+        self.publish_subscriber = self.create_subscription(Bool, "/drivetrain/publish", self.publish_subscribe_callback, 10)
 
         # Define Current pose parameters
         self.currentPose = Pose()
@@ -74,9 +76,17 @@ class DriveTrain(Node):
         self.currentPose.orientation.z = 0.0
 
         # Initialize PID controller
-        self.translateXPID = PIDcontroller(tPID[0], tPID[1], tPID[2], (dt * 0.01))
-        self.translateYPID = PIDcontroller(tPID[0], tPID[1], tPID[2], (dt * 0.01))
+        self.translateXPID = PIDcontroller(xPID[0], xPID[1], xPID[2], (dt * 0.01))
+        self.translateYPID = PIDcontroller(yPID[0], yPID[1], yPID[2], (dt * 0.01))
         self.rotatePID = PIDcontroller(rPID[0], rPID[1], rPID[2], (dt * 0.01))
+        
+        self.translate_tolerance = .01
+        self.rotate_tolerance = .05
+        
+        self.publish = True
+        
+    def publish_subscribe_callback(self, msg:Bool):
+        self.publish = msg.data
 
 
     # gets the current odometry of the robot
@@ -91,9 +101,6 @@ class DriveTrain(Node):
 
     # Update goal of the drive train
     def getGoal(self, goal: Pose) -> None:
-
-
-        
         if self.goal.position.x != goal.position.x or self.goal.position.y != goal.position.y or self.goal.orientation.z != goal.orientation.z:
 
             print("goal Recieved")
@@ -112,44 +119,41 @@ class DriveTrain(Node):
 
     # sets the current planned x and y movement
     def setVelocity(self):
+        if not self.publish:
+            return
 
-        min_val = 0.1
-        min_rot = 0.5
+        min_vel = 0.05
+        min_rot = 0.1
 
         # Define the error (difference between where you are and where you want to be)
         x_error = self.goal.position.x - self.currentPose.position.x
         y_error = self.goal.position.y - self.currentPose.position.y
-
-        # Get the angle error
-        z_error = self.normalize_angle(self.quatToEuler(self.goal) - self.quatToEuler(self.currentPose))
+        theta_error = self.normalize_angle(self.quatToEuler(self.goal) - self.quatToEuler(self.currentPose))
 
         # Build the message
         velocity = Twist()
-        velocity.linear.x = self.minimumfunction(self.translateXPID.update(x_error), min_val)
-        velocity.linear.y = self.minimumfunction(self.translateYPID.update(y_error), min_val)
-        velocity.angular.z = self.minimumfunction(self.rotatePID.update(z_error), min_rot)
+        
+        within_x = abs(x_error) <= self.translate_tolerance
+        within_y = abs(y_error) <= self.translate_tolerance
+        within_theta = abs(theta_error) <= self.rotate_tolerance
+        
+        if not within_x:
+            velocity.linear.x = self.minimumfunction(self.translateXPID.update(x_error), min_vel)
+        
+        if not within_y:
+            velocity.linear.y = self.minimumfunction(self.translateYPID.update(y_error), min_vel)
+        
+        if not within_theta:
+            velocity.angular.z = self.minimumfunction(self.rotatePID.update(theta_error), min_rot)
 
         print(velocity)
 
         # Publish
         self.velocity_publisher.publish(velocity)
+        within = within_x and within_y and within_theta
+        self.arrival_publisher.publish(Bool(data=bool(within)))
 
         # Check to see if we have arrived
-        self.closeEnough(x_error, y_error, z_error)
-
-    # Checks to see if the robot is close enough to the goal to cancel further movement
-    def closeEnough(self, x_error, y_error, z_error):
-        
-        if (abs(x_error) <= 0.01) and (abs(y_error) <= 0.01) and (abs(z_error) <= 0.01):
-            self.goal.position.x = self.currentPose.position.x
-            self.goal.position.y = self.currentPose.position.y
-            self.goal.orientation.w = self.currentPose.orientation.w
-            self.goal.orientation.z = self.currentPose.orientation.z
-
-            arrival = Bool()
-            arrival.data = True
-            self.arrival_publisher.publish(arrival)
-
     # Converts Quaternions to Euler angles
     # So we don't really care about most of the Quaternion because we are only going to rotate about the Z axis
     def quatToEuler(self, pose: Pose):
@@ -175,19 +179,20 @@ class DriveTrain(Node):
 
         return valsign * val
     
-    def normalize_angle(self, angle):
+    def normalize_angle(self, angle:float) -> float:
         return np.arctan2(np.sin(angle), np.cos(angle))
 
 
 def main():
     
     #Define PID values
-    translatePID = [0.2, 0, 0]
-    rotatePID = [0.2, 0, 0]
+    xPID = [.5, 0, 0]
+    yPID = [.4, 0, 0]
+    rotatePID = [1.28, 0, 0]
     
     rclpy.init()
 
-    driveTrain = DriveTrain(translatePID, rotatePID, 10)
+    driveTrain = DriveTrain(xPID, yPID, rotatePID, 10)
     rclpy.spin(driveTrain)
 
 if __name__ == '__main__':

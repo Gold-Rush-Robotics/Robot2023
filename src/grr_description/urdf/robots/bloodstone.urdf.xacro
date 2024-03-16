@@ -13,6 +13,7 @@
   <xacro:include filename="$(find grr_description)/urdf/parts/bridge.xacro"/>
   <xacro:include filename="$(find grr_description)/urdf/parts/lidar.xacro"/>
   <xacro:include filename="$(find grr_description)/urdf/parts/zed_cam.xacro"/>
+  <xacro:include filename="$(find grr_description)/urdf/parts/usb_camera.xacro"/>
   <xacro:include filename="$(find grr_description)/urdf/control/drive.xacro"/>
 
 

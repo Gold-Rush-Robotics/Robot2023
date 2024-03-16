@@ -65,6 +65,7 @@ public:
   hardware_interface::return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
 private:
+  double ticksToMeters(double ticks);
   // Parameters for the DiffBot simulation
   double hw_start_sec_;
   double hw_stop_sec_;

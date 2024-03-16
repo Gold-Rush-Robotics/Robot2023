@@ -25,7 +25,15 @@
 #include <cmath>
 
 #include "grr_cmake_controller/rolling_mean_accumulator.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "geometry_msgs/msg/pose_with_covariance.hpp"
+#include "geometry_msgs/msg/pose.hpp"
+#include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "rclcpp/time.hpp"
+#include "realtime_tools/realtime_box.h"
+#include "realtime_tools/realtime_buffer.h"
+#include "realtime_tools/realtime_publisher.h"
 
 namespace grr_cmake_controller
 {
@@ -35,26 +43,25 @@ public:
   explicit Odometry(size_t velocity_rolling_window_size = 10);
 
   void init(const rclcpp::Time & time);
-  bool update(double left_pos, double right_pos, const rclcpp::Time & time);
-  bool updateFromVelocity(double left_vel, double right_vel, const rclcpp::Time & time);
-  void updateOpenLoop(double linear, double angular, const rclcpp::Time & time);
+  bool update(double front_left_wheel_velocity,double front_right_wheel_velocity,double rear_left_wheel_velocity,double rear_right_wheel_velocity, const rclcpp::Time & time);
   void resetOdometry();
+  void publish();
 
   double getX() const { return x_; }
   double getY() const { return y_; }
   double getHeading() const { return heading_; }
-  double getLinear() const { return linear_; }
-  double getAngular() const { return angular_; }
+  double getLinearX() const { return linear_x_; }
+  double getLinearY() const { return linear_y_; }
+  double getAngular() const { return angular_z_; }
 
-  void setWheelParams(double wheel_separation, double left_wheel_radius, double right_wheel_radius);
+  void setOdometry(double x, double y, double quat_x, double quat_y, double quat_z, double quat_w);
+  double QuaternionToYaw(double x, double y, double z, double w);
+
+  void setWheelParams(double wheel_radius, double chassis_center_to_axle, double axle_center_to_wheel);
   void setVelocityRollingWindowSize(size_t velocity_rolling_window_size);
 
 private:
   using RollingMeanAccumulator = grr_cmake_controller::RollingMeanAccumulator<double>;
-
-  void integrateRungeKutta2(double linear, double angular);
-  void integrateExact(double linear, double angular);
-  void resetAccumulators();
 
   // Current timestamp:
   rclcpp::Time timestamp_;
@@ -62,24 +69,21 @@ private:
   // Current pose:
   double x_;        //   [m]
   double y_;        //   [m]
-  double heading_;  // [rad]
-
-  // Current velocity:
-  double linear_;   //   [m/s]
-  double angular_;  // [rad/s]
-
-  // Wheel kinematic parameters [m]:
-  double wheel_separation_;
-  double left_wheel_radius_;
-  double right_wheel_radius_;
-
-  // Previous wheel position/state [rad]:
-  double left_wheel_old_pos_;
-  double right_wheel_old_pos_;
+  double heading_;
+  double linear_x_;
+  double linear_y_;
+  double angular_z_;
+  double chassis_center_to_axle_;
+  double axle_center_to_wheel_;
+  double wheel_radius_;
+  rclcpp::Node::SharedPtr node_;
+  std::shared_ptr<rclcpp::Publisher<nav_msgs::msg::Odometry>> odom_publisher_ = nullptr;
+  std::shared_ptr<realtime_tools::RealtimePublisher<nav_msgs::msg::Odometry>> realtime_odom_publisher_ = nullptr;
 
   // Rolling mean accumulators for the linear and angular velocities:
   size_t velocity_rolling_window_size_;
-  RollingMeanAccumulator linear_accumulator_;
+  RollingMeanAccumulator linear_accumulator_x_;
+  RollingMeanAccumulator linear_accumulator_y_;
   RollingMeanAccumulator angular_accumulator_;
 };
 

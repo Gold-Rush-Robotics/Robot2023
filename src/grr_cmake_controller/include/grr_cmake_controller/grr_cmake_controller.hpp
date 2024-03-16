@@ -28,7 +28,9 @@
 
 #include "controller_interface/controller_interface.hpp"
 #include "grr_cmake_controller/visibility_control.h"
+#include "grr_cmake_controller/odometry.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "hardware_interface/handle.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -45,12 +47,17 @@ using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface
 
 class Wheel {
   public:
-    Wheel(std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity, std::string name);
+    Wheel(std::reference_wrapper<hardware_interface::LoanedCommandInterface> command_velocity_,std::reference_wrapper< const hardware_interface::LoanedStateInterface> state_velocity_,std::string name);
     void set_velocity(double velocity);
+    double get_velocity();
 
   private:
-    std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_;
+    std::reference_wrapper<hardware_interface::LoanedCommandInterface> command_velocity_;
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> state_velocity_;
     std::string name;
+    std::shared_ptr<std::mutex> mutex_ = std::make_shared<std::mutex>();
+
+
 };
 
 class MecanumController : public controller_interface::ControllerInterface
@@ -102,6 +109,7 @@ protected:
   std::string front_right_joint_name_;
   std::string rear_left_joint_name_;
   std::string rear_right_joint_name_;
+  std::shared_ptr<Odometry> odom = std::make_shared<Odometry>();
 
   struct WheelParams
   {
@@ -117,6 +125,8 @@ protected:
   // Topic Subscription
   bool subscriber_is_active_ = false;
   rclcpp::Subscription<Twist>::SharedPtr velocity_command_subscriber_ = nullptr;
+  rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr
+    pose_command_subscriber_ = nullptr;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr
     velocity_command_unstamped_subscriber_ = nullptr;
 

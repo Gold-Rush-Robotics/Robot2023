@@ -1,12 +1,16 @@
 controller_manager:
   ros__parameters:
-    update_rate: 1  # Hz
+    update_rate: 10  # Hz
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
     grr_cmake_controller:
       type: grr_cmake_controller/MecanumController
+    
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+      publish_rate: 10  # Hz
 
 joint_state_broadcaster:
   ros__parameters:
@@ -55,9 +59,21 @@ grr_cmake_controller:
     rear_left_joint: "rear_left_mecanum_joint"
     rear_right_joint: "rear_right_mecanum_joint"
 
-    chassis_center_to_axle: 0.104775 #4.125 in to m
-    axle_center_to_wheel: 0.10795 #4.25 in
+    chassis_center_to_axle: 0.102 #4.125 in to m
+    axle_center_to_wheel: 0.1075 #4.25 in
     wheel_radius: 0.0375 #1.5 in
 
     cmd_vel_timeout: 0.5
     use_stamped_vel: false
+joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - small_package_grabber_roller_1_joint
+      - small_package_sweeper_roller_joint
+    #allow messages without all joints
+    allow_partial_joints_goal: true
+    state_interfaces:
+      - position
+      - velocity
+    command_interfaces:
+      - effort

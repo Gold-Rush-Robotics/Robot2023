@@ -19,14 +19,16 @@ def generate_launch_description():
     rviz_file = os.path.join(config_pkg_path, 'config', 'config.rviz')
     robot_description_config = xacro.process_file(xacro_file)
     robot_description_xml = robot_description_config.toxml()
-    print(robot_description_xml)
-    source_code_path = os.path.abspath(os.path.join(description_pkg_path, "../../../../src/Robot2023/src/grr_description"))
-    urdf_save_path = os.path.join(source_code_path, "bloodstone.urdf")
+    camera_config_dir = os.path.join(get_package_share_directory('grr_bringup'), 'config')
 
-    with open(urdf_save_path, 'w') as f:
-        f.write(robot_description_xml)
+    print(robot_description_xml)
+    # source_code_path = os.path.abspath(os.path.join(description_pkg_path, "../../../../src/Robot2023/src/grr_description"))
+    # urdf_save_path = os.path.join(source_code_path, "bloodstone.urdf")
+
+    # with open(urdf_save_path, 'w') as f:
+    #     f.write(robot_description_xml)
     # Create a robot_state_publisher node
-    description_params = {'robot_description': robot_description_xml, 'use_sim_time': True }
+    description_params = {'robot_description': robot_description_xml, 'use_sim_time': False }
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -39,7 +41,7 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[{'robot_description': robot_description_xml, 'use_sim_time': True }, controllers_file],
+        parameters=[{'robot_description': robot_description_xml, 'use_sim_time': False }, controllers_file],
         output="screen",
     )
 
@@ -49,6 +51,11 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+    )
+    joint_trajectory_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_trajectory_controller", "--controller-manager", "/controller_manager"],
     )
     
 
@@ -71,7 +78,7 @@ def generate_launch_description():
     run_rviz2_node = Node(
         package='rviz2',
         executable='rviz2',
-        parameters=[{ 'use_sim_time': True }],
+        parameters=[{ 'use_sim_time': False }],
         name='isaac_rviz2',
         output='screen',
         arguments=[["-d"], [rviz_file]],
@@ -110,6 +117,20 @@ def generate_launch_description():
         parameters=[joystick_file],
         remappings={('/cmd_vel', '/grr_cmake_controller/cmd_vel_unstamped')}
         )
+    usb_cam_1 = Node(
+        package='usb_cam',
+        executable='usb_cam_node_exe',
+        name="camera_1",
+        namespace="camera_1",
+        parameters=[os.path.join(camera_config_dir, 'camera_1_param.yaml')],
+    )
+    usb_cam_2 = Node(
+        package='usb_cam',
+        executable='usb_cam_node_exe',
+        name="camera_2",
+        namespace="camera_2",
+        parameters=[os.path.join(camera_config_dir, 'camera_2_param.yaml')],
+    )
 
 
     # Launch!
@@ -117,8 +138,11 @@ def generate_launch_description():
         control_node,
         node_robot_state_publisher,
         joint_state_broadcaster_spawner,
+        joint_trajectory_controller_spawner,
         mecanum_drive_controller_delay,
         # rviz2_delay,
         joy,
-        joy_teleop
+        joy_teleop,
+        # usb_cam_1,
+        # usb_cam_2,
     ])

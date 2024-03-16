@@ -53,5 +53,6 @@ CATKIN_IGNORE
 
 install/
 log/
+.vscode/*
 
 bloodstone.urdf
