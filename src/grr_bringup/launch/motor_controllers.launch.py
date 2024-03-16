@@ -15,18 +15,16 @@ def generate_launch_description():
     joystick_file = os.path.join(config_pkg_path, 'config', 'xbox-holonomic.config.yaml')
     xacro_file = os.path.join(description_pkg_path, 'urdf', 'robots','bloodstone.urdf.xacro')
     controllers_file = os.path.join(config_pkg_path, 'config', 'controllers.yaml')
-    print(controllers_file)
     rviz_file = os.path.join(config_pkg_path, 'config', 'config.rviz')
     robot_description_config = xacro.process_file(xacro_file)
     robot_description_xml = robot_description_config.toxml()
-    print(robot_description_xml)
     source_code_path = os.path.abspath(os.path.join(description_pkg_path, "../../../../src/Robot2023/src/grr_description"))
     urdf_save_path = os.path.join(source_code_path, "bloodstone.urdf")
 
     with open(urdf_save_path, 'w') as f:
         f.write(robot_description_xml)
     # Create a robot_state_publisher node
-    description_params = {'robot_description': robot_description_xml, 'use_sim_time': True }
+    description_params = {'robot_description': robot_description_xml, 'use_sim_time': False }
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -39,7 +37,7 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[{'robot_description': robot_description_xml, 'use_sim_time': True }, controllers_file],
+        parameters=[{'robot_description': robot_description_xml, 'use_sim_time': False }, controllers_file],
         output="screen",
     )
 
@@ -71,7 +69,7 @@ def generate_launch_description():
     run_rviz2_node = Node(
         package='rviz2',
         executable='rviz2',
-        parameters=[{ 'use_sim_time': True }],
+        parameters=[{ 'use_sim_time': False }],
         name='isaac_rviz2',
         output='screen',
         arguments=[["-d"], [rviz_file]],

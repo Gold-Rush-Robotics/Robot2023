@@ -1,14 +1,14 @@
 #!/usr/bin/python3
+from __future__ import annotations
+
 import rclpy
 from rclpy.node import Node
 import time
 
-from __future__ import annotations
-
 
 
 #msg imports
-from sensor_msgs.msg import Range, JointStates
+from sensor_msgs.msg import Range, JointState
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist, Pose
 from trajectory_msgs.msg import JointTrajectory 
@@ -20,8 +20,8 @@ class Action:
     name: str
 
     def __init__(self) -> None:
-        name = self.__qualname__
-        nextAction = Action()
+        self.name = self.__class__.__name__
+        self.nextAction = self
 
     def setNext(self, nextAction: Action):
         nextAction.nextAction = self.nextAction

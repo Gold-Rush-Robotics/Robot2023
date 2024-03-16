@@ -36,8 +36,8 @@ class GRR_Window(QMainWindow):
 class Gui(Node):
     def __init__(self, application:QApplication, window:GRR_Window) -> None:
         super().__init__("GUI")
-        self.test_publisher = self.create_publisher(Bool, "test", 10)
-        self.test_label = self.create_subscription(String, "test_str", self.display_test, 10)
+        self.start_button_pub = self.create_publisher(Bool, "/gui/start", 10)
+        self.test_label = self.create_subscription(String, "/gui/info", self.display_test, 10)
         self.gui_loop_timer = self.create_timer(.1, self.gui_loop)
         self.app = application
         self.window = window
@@ -45,11 +45,11 @@ class Gui(Node):
         self.bind()
         
     def bind(self):
-        self.window.button.clicked.connect(self.send_test)
+        self.window.button.clicked.connect(self.send_start)
         
-    def send_test(self, checked):
+    def send_start(self, checked):
         self.window.button.setText(f"Ready to Start? {'Yes' if checked else 'No '}")
-        self.test_publisher.publish(Bool(data=checked))
+        self.start_button_pub.publish(Bool(data=checked))
     
     def display_test(self, msg:String):
         print(msg)
