@@ -30,6 +30,7 @@
 #include "grr_cmake_controller/visibility_control.h"
 #include "grr_cmake_controller/odometry.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "hardware_interface/handle.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -124,6 +125,8 @@ protected:
   // Topic Subscription
   bool subscriber_is_active_ = false;
   rclcpp::Subscription<Twist>::SharedPtr velocity_command_subscriber_ = nullptr;
+  rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr
+    pose_command_subscriber_ = nullptr;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr
     velocity_command_unstamped_subscriber_ = nullptr;
 

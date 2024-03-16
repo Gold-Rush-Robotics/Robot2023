@@ -170,7 +170,7 @@ controller_interface::return_type MecanumController::update(
   rear_right_handle_->set_velocity(rear_right_velocity);
 
   //Update Odometry
-  bool update = odom->update(front_left_handle_->get_velocity(),front_right_handle_->get_velocity(),rear_left_handle_->get_velocity(),rear_right_handle_->get_velocity(),current_time);
+  odom->update(front_left_handle_->get_velocity(),front_right_handle_->get_velocity(),rear_left_handle_->get_velocity(),rear_right_handle_->get_velocity(),current_time);
   // RCLCPP_INFO(logger,"wheel velocities: %f, %f, %f, %f",front_left_handle_->get_velocity(),front_right_handle_->get_velocity(),rear_left_handle_->get_velocity(),rear_right_handle_->get_velocity());
   // RCLCPP_INFO(logger,"update called: %d",update);
   // RCLCPP_INFO(logger,"time: %f",time.seconds());
@@ -269,6 +269,17 @@ CallbackReturn MecanumController::on_configure(const rclcpp_lifecycle::State &)
         twist_stamped->header.stamp = get_node()->get_clock()->now();
       });
   }
+  pose_command_subscriber_ = get_node()->create_subscription<geometry_msgs::msg::Pose>(
+    "pose", rclcpp::SystemDefaultsQoS(),
+    [this](const std::shared_ptr<geometry_msgs::msg::Pose> msg) -> void {
+      if (!subscriber_is_active_)
+      {
+        RCLCPP_WARN(get_node()->get_logger(), "Can't accept new commands. subscriber is inactive");
+        return;
+      }
+      RCLCPP_INFO(get_node()->get_logger(), "Received pose reset command: x: %f, y: %f, z: %f", msg->position.x, msg->position.y, msg->position.z);
+      odom->setOdometry(msg->position.x, msg->position.y, msg->orientation.x, msg->orientation.y, msg->orientation.z, msg->orientation.w);
+    });
 
   previous_update_timestamp_ = get_node()->get_clock()->now();
   return CallbackReturn::SUCCESS;

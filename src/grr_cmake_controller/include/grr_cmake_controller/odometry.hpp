@@ -54,6 +54,9 @@ public:
   double getLinearY() const { return linear_y_; }
   double getAngular() const { return angular_z_; }
 
+  void setOdometry(double x, double y, double quat_x, double quat_y, double quat_z, double quat_w);
+  double QuaternionToYaw(double x, double y, double z, double w);
+
   void setWheelParams(double wheel_radius, double chassis_center_to_axle, double axle_center_to_wheel);
   void setVelocityRollingWindowSize(size_t velocity_rolling_window_size);
 

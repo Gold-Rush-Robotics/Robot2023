@@ -78,7 +78,7 @@ hardware_interface::CallbackReturn IsaacDriveHardware::on_init(const hardware_in
       return CallbackReturn::ERROR;
     }
 
-    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY)
+    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY && joint.command_interfaces[0].name != hardware_interface::HW_IF_EFFORT)
     {
       RCLCPP_FATAL(
         rclcpp::get_logger("IsaacDriveHardware"),
@@ -141,8 +141,24 @@ std::vector<hardware_interface::CommandInterface> IsaacDriveHardware::export_com
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
+    if (info_.joints[i].command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY )
+    {
+      command_interfaces.emplace_back(hardware_interface::CommandInterface(
+       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
+    }
+    else if (info_.joints[i].command_interfaces[0].name == hardware_interface::HW_IF_EFFORT )
+    {
+      command_interfaces.emplace_back(hardware_interface::CommandInterface(
+       info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &hw_commands_[i]));
+    }
+    else{
+      RCLCPP_FATAL(
+        rclcpp::get_logger("IsaacDriveHardware"),
+        "Joint '%s' have '%s' as command interface. '%s' or '%s' expected.", info_.joints[i].name.c_str(),
+        info_.joints[i].command_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY, hardware_interface::HW_IF_EFFORT);
+      throw std::runtime_error("Invalid command interface");
+    }
+    
   }
 
   return command_interfaces;

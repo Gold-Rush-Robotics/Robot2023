@@ -88,6 +88,18 @@ void Odometry::setWheelParams(double wheel_radius, double chassis_center_to_axle
   chassis_center_to_axle_ = chassis_center_to_axle;
   axle_center_to_wheel_ = axle_center_to_wheel;
 }
+void Odometry::setOdometry(double x, double y, double quat_x, double quat_y, double quat_z, double quat_w)
+{
+  x_ = x;
+  y_ = y;
+  heading_ = QuaternionToYaw(quat_x, quat_y, quat_z, quat_w);
+}
+double Odometry::QuaternionToYaw(double x, double y, double z, double w)
+{
+  double siny_cosp = 2 * (w * z + x * y);
+  double cosy_cosp = 1 - 2 * (y * y + z * z);
+  return std::atan2(siny_cosp, cosy_cosp);
+}
 void Odometry::publish()
 {
 

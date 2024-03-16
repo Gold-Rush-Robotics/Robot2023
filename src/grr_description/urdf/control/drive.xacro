@@ -39,6 +39,16 @@
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
+    <joint name="small_package_grabber_roller_1_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="small_package_sweeper_roller_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
   </ros2_control>
 
 </robot>

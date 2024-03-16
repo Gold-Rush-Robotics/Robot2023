@@ -52,6 +52,11 @@ def generate_launch_description():
         executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
     )
+    joint_trajectory_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_trajectory_controller", "--controller-manager", "/controller_manager"],
+    )
     
 
 
@@ -133,6 +138,7 @@ def generate_launch_description():
         control_node,
         node_robot_state_publisher,
         joint_state_broadcaster_spawner,
+        joint_trajectory_controller_spawner,
         mecanum_drive_controller_delay,
         # rviz2_delay,
         joy,
