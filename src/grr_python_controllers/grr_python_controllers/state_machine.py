@@ -6,131 +6,58 @@ import time
 #msg imports
 from sensor_msgs.msg import Range, JointStates
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, Pose
 from trajectory_msgs.msg import JointTrajectory 
+from std_msgs.msg import Bool, Float32
+
 
 class StateMachine(Node):
-    def __init__(self):
-        super().__init__('minimal_subscriber')
+    def __init__(self, dt):
+        super().__init__('State_Machine')
 
         self.state = 0
 
         #===================================
         # Listeners:
         #===================================
+        # Goal Listener
+        self.goalSubscribers = self.create_subscription(Bool, "arrived_at_goal", self.check_goal, dt)
+
         # Green Light Listener
-        self.greenSubscriber = self.create_subscription(Range,'sensor_msgs/msg/Range', self.green_light_callback, 10)
-        self.greenSubscriber  # prevent unused variable warning
-
-        # Joint States Listener
-        self.greenSubscriber = self.create_subscription(JointStates,'sensor_msgs/msg/JointStates', self.jointStates_callback, 10)
-        self.greenSubscriber  # prevent unused variable warning
-
-        # Nav mag listener
-        self.greenSubscriber = self.create_subscription(Odometry,'nav_msgs/Odometry', self.odometry_callback, 10)
-        self.greenSubscriber  # prevent unused variable warning
+        self.greenSubscriber = self.create_subscription(Range,'sensor_msgs/msg/Range', self.green_light_callback, dt)
 
 
+        
+        
         #==========================================
         # Publishers
         #==========================================
-        
-        self.jointState_publisher = self.create_publisher()
-        
-        self.pose_publisher = self.create_publisher(Twist, 'cmd_vel', 10)
-
-        self.April_publisher = self.create_publisher()
-
-        self.jointTrajectory_publisher = self.create_publisher()
+        self.goal_Publisher = self.create_publisher(Pose, "goal", self.getGoal, dt)
 
 
-
-
-
+        # I define a goal that can be modified throughout the program and sent when new goals are needed
+        self.goal = Pose()
+        self.goal.position.x = 0.0
+        self.goal.position.y = 0.0
+        self.currentPose.orientation.w = 0.0
+        self.currentPose.orientation.x = 0.0
+        self.currentPose.orientation.y = 0.0
+        self.currentPose.orientation.z = 0.0
 
 
 
-
-    #===========================
-    #Call back functions
-    #===========================
-
+    # Checks to see if the light is green or not 
     def green_light_callback(self, msg):
-        if(msg == "GREEN"):
-            self.state = 1
-            return True
-        
-        else: 
-            return False
-
-    def jointStates_callback(self, msg):
-        pass
-
-    def odometry_callback(self, msg):
-        pass
-
-
-    def nextState(self):
-        self.state = self.state + 1
-
-
-
-
+        self.light = msg
 
 
 def main():
-    # Initialize State manchine
 
-    stateMachine = StateMachine()
-
-
-    #State Zero : Green Light
-
-    stateMachine.nextState()
-
-    #State One : April Tags
-    # Step1: Place 
-    StateMachine.April_publisher().publish(pass)
-    # Step2: Push 
-    msg = Twist()
-    msg.linear.x = 
-    StateMachine.pose_publisher().publish(msg)
-    stateMachine.nextState()
-
-    #State Two: Big Block Grab
-    # Open Hand
-    StateMachine.jointTrajectory_publisher().publish(pass)
-    # Lower Arm
-    StateMachine.jointTrajectory_publisher().publish(pass)
-    # Close Hand
-    StateMachine.jointTrajectory_publisher().publish(pass)
-    # Raise Arm
-    StateMachine.jointTrajectory_publisher().publish(pass)
-    stateMachine.nextState()
-
-
-    #State Three: Small Block Grab
-    StateMachine.pose_publisher().publish(pass)
-    stateMachine.nextState()
-
-    #State Four: Go to the drop off zone
-    StateMachine.pose_publisher().publish(pass)
-    stateMachine.nextState()
+    rclpy.init()
+    Renwick = StateMachine(10)
+    rclpy.spin(StateMachine)
 
 
 
-
-
-    
-    
-
-    #State Twelve : Finish State / Clean up :)
-    #TODO clean up
-
-
-
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
-
