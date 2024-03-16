@@ -30,13 +30,18 @@ def generate_launch_description():
         parameters=[params]
     )
 
-    # Start Rviz2 with basic view
-    # rviz2_config_path = os.path.join(get_package_share_directory('grr_description'), 'config/isaac.rviz')
-    # run_rviz2 = ExecuteProcess(
-    #     cmd=['rviz2', '-d', rviz2_config_path],
-    #     output='screen'
-    # )
+    joint_state_publisher_gui = Node(
+        package='joint_state_publisher_gui',
+        executable='joint_state_publisher_gui',
+        output='screen'
+    )
 
+    # Start Rviz2 with basic view
+    rviz2_config_path = os.path.join(get_package_share_directory('grr_bringup'), 'config/rviz.rviz')
+    run_rviz2 = ExecuteProcess(
+        cmd=['rviz2', '-d', rviz2_config_path],
+        output='screen'
+    )
     # Launch!
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -45,5 +50,6 @@ def generate_launch_description():
             description='Use sim time if true'),
 
         node_robot_state_publisher,
-        # run_rviz2
+        joint_state_publisher_gui,
+        run_rviz2
     ])

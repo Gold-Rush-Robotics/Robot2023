@@ -189,7 +189,10 @@ hardware_interface::CallbackReturn IsaacDriveHardware::on_deactivate(
 
 // ||                        ||
 // \/ THE STUFF THAT MATTERS \/
-
+double IsaacDriveHardware::ticksToMeters(double ticks)
+{
+  return ticks;
+}
 hardware_interface::return_type grr_hardware::IsaacDriveHardware::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   rclcpp::spin_some(node_);
@@ -210,7 +213,7 @@ hardware_interface::return_type grr_hardware::IsaacDriveHardware::read(const rcl
     uint p = joint_names_map_[names[i]];
     if (p > 0) {
       hw_positions_[p - 1] = positions[i];
-      hw_velocities_[p - 1] = velocities[i];
+      hw_velocities_[p - 1] = ticksToMeters(velocities[i]);
     }
   }
   

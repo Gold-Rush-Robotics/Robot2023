@@ -18,6 +18,7 @@
 
 #include "grr_cmake_controller/odometry.hpp"
 
+
 namespace grr_cmake_controller
 {
 Odometry::Odometry(size_t velocity_rolling_window_size)
@@ -25,15 +26,15 @@ Odometry::Odometry(size_t velocity_rolling_window_size)
   x_(0.0),
   y_(0.0),
   heading_(0.0),
-  linear_(0.0),
-  angular_(0.0),
-  wheel_separation_(0.0),
-  left_wheel_radius_(0.0),
-  right_wheel_radius_(0.0),
-  left_wheel_old_pos_(0.0),
-  right_wheel_old_pos_(0.0),
+  linear_x_(0.0),
+  linear_y_(0.0),
+  angular_z_(0.0),
+  chassis_center_to_axle_(0.0),
+  axle_center_to_wheel_(0.0),
+  wheel_radius_(0.0),
   velocity_rolling_window_size_(velocity_rolling_window_size),
-  linear_accumulator_(velocity_rolling_window_size),
+  linear_accumulator_x_(velocity_rolling_window_size),
+  linear_accumulator_y_(velocity_rolling_window_size),
   angular_accumulator_(velocity_rolling_window_size)
 {
 }
@@ -41,70 +42,37 @@ Odometry::Odometry(size_t velocity_rolling_window_size)
 void Odometry::init(const rclcpp::Time & time)
 {
   // Reset accumulators and timestamp:
-  resetAccumulators();
   timestamp_ = time;
+  node_ = rclcpp::Node::make_shared("odometry");
+
+   // PUBLISHER SETUP
+  odom_publisher_ = node_->create_publisher<nav_msgs::msg::Odometry>("odom", rclcpp::SystemDefaultsQoS());
+  realtime_odom_publisher_ = std::make_shared<realtime_tools::RealtimePublisher<nav_msgs::msg::Odometry>>(
+      odom_publisher_);
 }
 
-bool Odometry::update(double left_pos, double right_pos, const rclcpp::Time & time)
+bool Odometry::update(double front_left_wheel_velocity,double front_right_wheel_velocity,double rear_left_wheel_velocity,double rear_right_wheel_velocity, const rclcpp::Time & time)
 {
   // We cannot estimate the speed with very small time intervals:
-  const double dt = time.seconds() - timestamp_.seconds();
+  double dt = time.seconds() - timestamp_.seconds();
+  timestamp_ = time;
   if (dt < 0.0001)
   {
     return false;  // Interval too small to integrate with
   }
 
-  // Get current wheel joint positions:
-  const double left_wheel_cur_pos = left_pos * left_wheel_radius_;
-  const double right_wheel_cur_pos = right_pos * right_wheel_radius_;
+  linear_x_ = (front_left_wheel_velocity + front_right_wheel_velocity + rear_left_wheel_velocity + rear_right_wheel_velocity)*wheel_radius_/4.0;
+  linear_y_ = (front_right_wheel_velocity+rear_left_wheel_velocity-front_left_wheel_velocity-rear_right_wheel_velocity)*wheel_radius_/4;
+  angular_z_ = (rear_right_wheel_velocity+front_right_wheel_velocity-front_left_wheel_velocity-rear_left_wheel_velocity)*wheel_radius_/(4*(chassis_center_to_axle_+axle_center_to_wheel_));
 
-  // Estimate velocity of wheels using old and current position:
-  const double left_wheel_est_vel = left_wheel_cur_pos - left_wheel_old_pos_;
-  const double right_wheel_est_vel = right_wheel_cur_pos - right_wheel_old_pos_;
-
-  // Update old position with current:
-  left_wheel_old_pos_ = left_wheel_cur_pos;
-  right_wheel_old_pos_ = right_wheel_cur_pos;
-
-  updateFromVelocity(left_wheel_est_vel, right_wheel_est_vel, time);
-
-  return true;
-}
-
-bool Odometry::updateFromVelocity(double left_vel, double right_vel, const rclcpp::Time & time)
-{
-  const double dt = time.seconds() - timestamp_.seconds();
-
-  // Compute linear and angular diff:
-  const double linear = (left_vel + right_vel) * 0.5;
-  // Now there is a bug about scout angular velocity
-  const double angular = (right_vel - left_vel) / wheel_separation_;
 
   // Integrate odometry:
-  integrateExact(linear, angular);
-
-  timestamp_ = time;
-
-  // Estimate speeds using a rolling mean to filter them out:
-  linear_accumulator_.accumulate(linear / dt);
-  angular_accumulator_.accumulate(angular / dt);
-
-  linear_ = linear_accumulator_.getRollingMean();
-  angular_ = angular_accumulator_.getRollingMean();
-
+  x_ += (linear_x_ * cos(heading_) - linear_y_ * sin(heading_))*dt;
+  y_ += (linear_x_ * sin(heading_) + linear_y_ * cos(heading_))*dt;
+  heading_ += angular_z_*dt;
+  RCLCPP_INFO(node_->get_logger(), "x: %f, y: %f, heading: %f", x_, y_, heading_);
+  publish();
   return true;
-}
-
-void Odometry::updateOpenLoop(double linear, double angular, const rclcpp::Time & time)
-{
-  /// Save last linear and angular velocity:
-  linear_ = linear;
-  angular_ = angular;
-
-  /// Integrate odometry:
-  const double dt = time.seconds() - timestamp_.seconds();
-  timestamp_ = time;
-  integrateExact(linear * dt, angular * dt);
 }
 
 void Odometry::resetOdometry()
@@ -114,52 +82,41 @@ void Odometry::resetOdometry()
   heading_ = 0.0;
 }
 
-void Odometry::setWheelParams(
-  double wheel_separation, double left_wheel_radius, double right_wheel_radius)
+void Odometry::setWheelParams(double wheel_radius, double chassis_center_to_axle, double axle_center_to_wheel)
 {
-  wheel_separation_ = wheel_separation;
-  left_wheel_radius_ = left_wheel_radius;
-  right_wheel_radius_ = right_wheel_radius;
+  wheel_radius_ = wheel_radius;
+  chassis_center_to_axle_ = chassis_center_to_axle;
+  axle_center_to_wheel_ = axle_center_to_wheel;
 }
-
-void Odometry::setVelocityRollingWindowSize(size_t velocity_rolling_window_size)
+void Odometry::publish()
 {
-  velocity_rolling_window_size_ = velocity_rolling_window_size;
 
-  resetAccumulators();
-}
-
-void Odometry::integrateRungeKutta2(double linear, double angular)
-{
-  const double direction = heading_ + angular * 0.5;
-
-  /// Runge-Kutta 2nd order integration:
-  x_ += linear * cos(direction);
-  y_ += linear * sin(direction);
-  heading_ += angular;
-}
-
-void Odometry::integrateExact(double linear, double angular)
-{
-  if (fabs(angular) < 1e-6)
-  {
-    integrateRungeKutta2(linear, angular);
+  if (realtime_odom_publisher_->trylock()) {
+    realtime_odom_publisher_->msg_.pose.pose.position.x = x_;
+    realtime_odom_publisher_->msg_.pose.pose.position.y = y_;
+    realtime_odom_publisher_->msg_.pose.pose.position.z = 0;
+    realtime_odom_publisher_->msg_.pose.pose.orientation.w = cos(heading_/2);
+    realtime_odom_publisher_->msg_.pose.pose.orientation.x = 0;
+    realtime_odom_publisher_->msg_.pose.pose.orientation.y = 0;
+    realtime_odom_publisher_->msg_.pose.pose.orientation.z = sin(heading_/2);
+    realtime_odom_publisher_->msg_.twist.twist.linear.x = linear_x_;
+    realtime_odom_publisher_->msg_.twist.twist.linear.y = linear_y_;
+    realtime_odom_publisher_->msg_.twist.twist.angular.z= angular_z_;
+    realtime_odom_publisher_->unlockAndPublish();
   }
-  else
-  {
-    /// Exact integration (should solve problems when angular is zero):
-    const double heading_old = heading_;
-    const double r = linear / angular;
-    heading_ += angular;
-    x_ += r * (sin(heading_) - sin(heading_old));
-    y_ += -r * (cos(heading_) - cos(heading_old));
-  }
-}
+  
 
-void Odometry::resetAccumulators()
-{
-  linear_accumulator_ = RollingMeanAccumulator(velocity_rolling_window_size_);
-  angular_accumulator_ = RollingMeanAccumulator(velocity_rolling_window_size_);
+
+  
 }
+// float[] eulerToQuat()
+//   // qx = np.sin() * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+//   qx=0;
+//   // qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+//   qy=0;
+//   // qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+//   qz= sin(yaw/2);
+//   // qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+//   qw= cos(yaw/2);
 
 }  // namespace grr_cmake_controller
