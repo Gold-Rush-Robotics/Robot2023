@@ -94,6 +94,7 @@ void Odometry::setOdometry(double x, double y, double quat_x, double quat_y, dou
   y_ = y;
   heading_ = QuaternionToYaw(quat_x, quat_y, quat_z, quat_w);
 }
+
 double Odometry::QuaternionToYaw(double x, double y, double z, double w)
 {
   double siny_cosp = 2 * (w * z + x * y);

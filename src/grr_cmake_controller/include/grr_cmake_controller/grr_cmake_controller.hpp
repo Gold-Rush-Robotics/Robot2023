@@ -110,6 +110,7 @@ protected:
   std::string rear_left_joint_name_;
   std::string rear_right_joint_name_;
   std::shared_ptr<Odometry> odom = std::make_shared<Odometry>();
+  std::shared_ptr<bool> fieldOrientationEnabled = std::make_shared<bool>(true);
 
   struct WheelParams
   {

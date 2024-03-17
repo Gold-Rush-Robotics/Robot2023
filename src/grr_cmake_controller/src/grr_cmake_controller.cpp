@@ -146,6 +146,14 @@ controller_interface::return_type MecanumController::update(
   Twist command = *last_command_msg;
   double & linear_x_cmd = command.twist.linear.x;
   double & linear_y_cmd = command.twist.linear.y;
+  if (this->fieldOrientationEnabled)
+    {
+      double robot_imu_orientation = odom->getHeading();
+      // RCLCPP_INFO(rclcpp::get_logger("TeleopTwistJoy"), "robot_orientation: %f", robot_imu_orientation);
+      double temp = linear_x_cmd * cos(robot_imu_orientation) + linear_y_cmd * sin(robot_imu_orientation);
+      linear_y_cmd = -1 * linear_x_cmd * sin(robot_imu_orientation) + linear_y_cmd * cos(robot_imu_orientation);
+      linear_x_cmd = temp;
+    }
   double & angular_cmd = command.twist.angular.z;
 
   double x_offset = wheel_params_.x_offset;

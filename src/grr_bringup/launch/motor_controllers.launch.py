@@ -19,10 +19,10 @@ def generate_launch_description():
     robot_description_config = xacro.process_file(xacro_file)
     robot_description_xml = robot_description_config.toxml()
     source_code_path = os.path.abspath(os.path.join(description_pkg_path, "../../../../src/Robot2023/src/grr_description"))
-    urdf_save_path = os.path.join(source_code_path, "bloodstone.urdf")
+    # urdf_save_path = os.path.join(source_code_path, "bloodstone.urdf")
 
-    with open(urdf_save_path, 'w') as f:
-        f.write(robot_description_xml)
+    # with open(urdf_save_path, 'w') as f:
+    #     f.write(robot_description_xml)
     # Create a robot_state_publisher node
     description_params = {'robot_description': robot_description_xml, 'use_sim_time': False }
     node_robot_state_publisher = Node(
