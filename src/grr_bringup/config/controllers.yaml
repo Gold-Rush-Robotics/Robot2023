@@ -76,4 +76,4 @@ joint_trajectory_controller:
       - position
       - velocity
     command_interfaces:
-      - effort
+      - velocity
