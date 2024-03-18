@@ -64,7 +64,8 @@ hardware_interface::CallbackReturn IsaacDriveHardware::on_init(const hardware_in
   // hw_stop_sec_ = stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
   hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  hw_commands_velocity_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  hw_commands_effort_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
@@ -144,12 +145,12 @@ std::vector<hardware_interface::CommandInterface> IsaacDriveHardware::export_com
     if (info_.joints[i].command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY )
     {
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
-       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
+       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_velocity_[i]));
     }
     else if (info_.joints[i].command_interfaces[0].name == hardware_interface::HW_IF_EFFORT )
     {
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
-       info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &hw_commands_[i]));
+       info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &hw_commands_effort_[i]));
     }
     else{
       RCLCPP_FATAL(
@@ -178,7 +179,8 @@ hardware_interface::CallbackReturn IsaacDriveHardware::on_activate(
     {
       hw_positions_[i] = 0;
       hw_velocities_[i] = 0;
-      hw_commands_[i] = 0;
+      hw_commands_velocity_[i] = 0;
+      hw_commands_effort_[i] = 0;
     }
     joint_names_map_[joint_names_[i]] = i + 1; // ADD 1 to differentiate null key
   }
@@ -246,7 +248,9 @@ hardware_interface::return_type grr_hardware::IsaacDriveHardware::write(const rc
     auto & realtime_isaac_command = realtime_isaac_publisher_->msg_;
     realtime_isaac_command.header.stamp = node_->get_clock()->now();
     realtime_isaac_command.name = joint_names_;
-    realtime_isaac_command.velocity = hw_commands_;
+    realtime_isaac_command.velocity = hw_commands_velocity_;
+    realtime_isaac_command.effort = hw_commands_effort_;
+
     realtime_isaac_publisher_->unlockAndPublish();
   }
   

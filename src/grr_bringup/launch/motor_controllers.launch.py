@@ -63,7 +63,23 @@ def generate_launch_description():
             on_exit=[mecanum_drive_controller_spawner],
         )
     )
-
+    # joint_trajectory_controller_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner",
+    #     arguments=["joint_trajectory_controller", "--controller-manager", "/controller_manager"],
+    # )
+    # joint_trajectory_controller_delay = RegisterEventHandler(
+    #     event_handler=OnProcessExit(
+    #         target_action=joint_state_broadcaster_spawner,
+    #         on_exit=[joint_trajectory_controller_spawner],
+    #     )
+    # )
+    effort_controllers_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["effort_controller", "--controller-manager", "/controller_manager"],
+        remappings={('/effort_controller/commands', '/dumb_motors')}
+    )
 
     # Start Rviz2 with basic view
     run_rviz2_node = Node(
@@ -116,6 +132,7 @@ def generate_launch_description():
         node_robot_state_publisher,
         joint_state_broadcaster_spawner,
         mecanum_drive_controller_delay,
+        effort_controllers_spawner,
         # rviz2_delay,
         joy,
         joy_teleop
