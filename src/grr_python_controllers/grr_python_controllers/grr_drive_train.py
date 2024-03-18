@@ -188,7 +188,7 @@ def main():
     #Define PID values
     xPID = [.5, 0, 0]
     yPID = [.4, 0, 0]
-    rotatePID = [1.28, 0, 0]
+    rotatePID = [1.145, 0, 0]
     
     rclpy.init()
 

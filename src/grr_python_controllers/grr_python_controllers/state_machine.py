@@ -27,91 +27,108 @@ class StateMachine(Node):
     def __init__(self):
         super().__init__('State_Machine')
         
-        # self.action_tree = ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechansim_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 0.0, 100.0]), 1, name="starting positions")
-        # self.action_tree = ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechansim_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 50.0, 0.0, 100.0]), 1, name="starting positions")
-        # self.action_tree.setNext(
-        #     WaitForStart()
-        # ).setNext(    
-        #     DriveToPose(Pose(position=Point(y=0.14)), name="deploy april tag")
-        # ).setNext(
-        #     ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, 10.0, 0.0, 100.0]), 1, name="Start Sweep")
-        # ).setNext(
-        #     MotorAction(Float64MultiArray(data=[100.0,-100.0]))
-        # ).setNext(
-        #     # ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 0.0, 5.0]), 1, name="Cube Pickup Positions")
-        #     ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, 100.0, 0.0, 5.0]), 1, name="Cube Pickup Positions")
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(y=0.00)), name="into cubes")
-        # ).setNext(
-        #     # ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 0.0, 0.0]), 1, name="Squeeze")
-        #     ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, -10.0, 0.0, 0.0]), 1, name="Squeeze")
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(y=0.03)), name="back up to lift")
-        # ).setNext(
-        #     ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, -10.0, 0.0, 80.0]), 1, name="Lift")
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(y=-0.14)), name="into the wall")
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=0.05, y=0.12)), name="north wall")
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=0.15, y=0.12)), name="forward on north wall")
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=0.15, y=-0.14)), name="to south wall")
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=0.15)), name="back to center")
-        # ).setNext(
-        #     MotorAction(Float64MultiArray(data=[100.0, 0.0]))
-        # ).setNext(
-        #     ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, -10.0, 0.0, 80.0]), 1, name="lift spinny thingy")
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=1.75)), name="across the hill")
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=2.5, y=-.5)), name="to the corner")
-        
-        self.action_tree = ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 50.0, 0.0, 80.0]), 1, name="lift spinny thingy")
-        
-        # self.action_tree.setNext(
-        #     CornerReset(Pose(position=Point(x=2.1336, y=-0.145)))
-        # ).setNext(
-        #     SleepAction(5)
-        # ).setNext(
-        #     MotorAction(Float64MultiArray(data=[-100.0, 0.0]))
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=2.05, y=-0.1)))
-        # ).setNext(
-        #     SleepAction(5)
-        # ).setNext(
-        #     MotorAction(Float64MultiArray(data=[0.0, 0.0]))
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=1.95, y=0.1)), name="out of the corner")
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=2.1, y=0.1)))
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=2.1, y=-0.1)))
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=1.95)))
-        # ).setNext(
-        #     DriveToPose(Pose(position=Point(x=1.95), orientation=Quaternion(z=0.707, w=0.707)), name="turn to drop packages")
-        # ).setNext(
-        #     ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, -10.0, 0.0, 0.0]), 1, name="Place")
-        # ).setNext(
-        #     ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 100.0, 0.0, 0.0]), 1, name="Release")
-        # ).setNext(
-        #     ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 100.0, 0.0, 80.0]), 1, name="Lift")
-        # ).setNext(
-        #     ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 10.0, 0.0, 80.0]), 1, name="Close")
-        # ).setNext(
-        #     Action()
-        # )
-        
+        #self.action_tree = ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechansim_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 0.0, 100.0]), 1, name="starting positions")
+        self.action_tree = ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechansim_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 50.0, 0.0, 100.0]), 1, name="starting positions")
         self.action_tree.setNext(
-            CornerReset(Pose(position=Point(x=1.95), orientation=Quaternion(z=0.707, w=0.707)))
+            CornerReset(Pose())
+        ).setNext(
+            WaitForStart()
+        ).setNext(    
+            DriveToPose(Pose(position=Point(y=0.14)), name="deploy april tag")
+        ).setNext(
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, 10.0, 0.0, 100.0]), .25, name="Start Sweep")
+        ).setNext(
+            MotorAction(Float64MultiArray(data=[100.0,-100.0]))
+        ).setNext(
+            # ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 0.0, 5.0]), 1, name="Cube Pickup Positions")
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, 100.0, 0.0, 5.0]), .5, name="Cube Pickup Positions")
+        ).setNext(
+            DriveToPose(Pose(position=Point(y=0.01)), name="into cubes")
+        ).setNext(
+            # ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 0.0, 0.0]), 1, name="Squeeze")
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, -10.0, 0.0, 0.0]), .5, name="Squeeze")
+        ).setNext(
+            DriveToPose(Pose(position=Point(y=0.03)), name="back up to lift")
+        ).setNext(
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, -10.0, 0.0, 80.0]), .25, name="Lift")
+        ).setNext(
+            DriveToPose(Pose(position=Point(y=-0.14)), name="into the wall")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=0.05, y=0.12)), name="north wall")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=0.15, y=0.12)), name="forward on north wall")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=0.15, y=-0.14)), name="to south wall")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=0.15)), name="back to center")
+        ).setNext(
+            MotorAction(Float64MultiArray(data=[100.0, 0.0]))
+        ).setNext(
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, -10.0, 0.0, 80.0]), 1, name="lift spinny thingy")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=1.75)), name="across the hill")
+        ).setNext(
+            MotorAction(Float64MultiArray(data=[0.0, 0.0]))
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=1.75, y=-0.2)), name="south wall square")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=1.75, y=-0.1)), name="off the wall")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=2.35, y=-.2)), name="to the corner")        
+        ).setNext(
+            CornerReset(Pose(position=Point(x=2.1336, y=-0.145)))
+        ).setNext(
+            SleepAction(.01)
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=2.1, y=-0.1)), name="back up a bit before spinning intake")
+        ).setNext(
+            MotorAction(Float64MultiArray(data=[-100.0, 0.0]))
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=2.05, y=-0.1)), name="back out of the zone while spinning intake")
+        ).setNext(
+            SleepAction(1)
+        ).setNext(
+            MotorAction(Float64MultiArray(data=[0.0, 0.0]))
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=1.95, y=0.1)), name="out of the corner")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=2.1, y=0.1)), name="over a bit")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=2.1, y=-0.1)), name="in a bit (push the cubes into the red zone)")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=1.95)), name="out of the corner")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=1.95), orientation=Quaternion(z=0.707, w=0.707)), name="turn to drop packages")
+        ).setNext(
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, -10.0, 0.0, 0.0]), .5, name="Place")
+        ).setNext(
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 100.0, 0.0, 0.0]), .1, name="Release")
+        ).setNext(
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 100.0, 0.0, 80.0]), .25, name="Lift")
+        ).setNext(
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 10.0, 0.0, 80.0]), .01, name="Close")
         ).setNext(
             DriveToPose(Pose(position=Point(x=1.95, y=0.55), orientation=Quaternion(z=0.707, w=0.707)))
         ).setNext(
             DriveToPose(Pose(position=Point(x=1.95, y=0.55)))
         ).setNext(
+            DriveToPose(Pose(position=Point(x=1.24, y=0.55)))
+        ).setNext(
             DriveToGap()
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=1.24, y=0.55)), name="back up for bridge") #CHANGE Y
+        ).setNext(
+            ServoAction(JointState(name=['bridge_latch_joint'], position=[0.0]), 1, "Drop Bridge")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=-0.1,y=0.55)), name="across the bridge into the wall")
+        ).setNext(
+            CornerReset(Pose(position=Point(x=0.0, y=0.55)))
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=0.05, y=0.55)), name="back up")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=0.05, y=0.55), orientation=Quaternion(z=1.0, w=0.0)), name="Spin")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=0.05, y=0.85), orientation=Quaternion(z=1.0, w=0.0)))
         ).setNext(
             Action()
         )
