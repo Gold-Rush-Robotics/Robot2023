@@ -55,10 +55,12 @@ bool Odometry::update(double front_left_wheel_velocity,double front_right_wheel_
 {
   // We cannot estimate the speed with very small time intervals:
   double dt = time.seconds() - timestamp_.seconds();
+
+  RCLCPP_INFO(node_->get_logger(), "time: %f", time);
   timestamp_ = time;
   if (dt < 0.0001)
   {
-    return false;  // Interval too small to integrate with
+    //return false;  // Interval too small to integrate with
   }
 
   linear_x_ = (front_left_wheel_velocity + front_right_wheel_velocity + rear_left_wheel_velocity + rear_right_wheel_velocity)*wheel_radius_/4.0;

@@ -132,7 +132,7 @@ class Robot(Node):
             if name not in self.servo_mapping.keys():
                 self.get_logger().info('Skipped')
                 continue
-            effort = data.effort[i]
+            effort = data.position[i]
             old_min = 0
             old_max = 100
             old_range = old_max - old_min

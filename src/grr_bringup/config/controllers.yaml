@@ -70,6 +70,7 @@ grr_cmake_controller:
     use_stamped_vel: false
 effort_controller:
   ros__parameters:
+    cmd_timeout: 1.0
     joints:
       - small_package_grabber_roller_1_joint
       - small_package_sweeper_roller_joint
