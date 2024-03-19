@@ -29,7 +29,7 @@ class Action:
         return self.nextAction
     
     def setLast(self, lastAction: Action):
-        if(self.nextAction):
+        if(self.nextAction) and (self.nextAction != self):
             return self.nextAction.setLast(lastAction)
         else:
             self.nextAction = lastAction

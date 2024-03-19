@@ -8,11 +8,13 @@ from adafruit_pca9685 import PCA9685
 from adafruit_tca9548a import TCA9548A
 from adafruit_tcs34725 import TCS34725
 from adafruit_vl6180x import VL6180X
-
+from adafruit_vl53l4cd import VL53L4CD
+from adafruit_lis3mdl import LIS3MDL
 
 
 from sensor_msgs.msg import JointState, LaserScan
 from std_msgs.msg import Int64MultiArray, Bool
+from geometry_msgs.msg import Vector3
 
 from rcl_interfaces.msg import SetParametersResult
 
@@ -72,12 +74,19 @@ class Robot(Node):
         self.declare_parameter('LED_Threshold', 100)
         
         self.down_tof = VL6180X(self.tca[0])
+        # self.left_tof = VL53L4CD(self.tca[3])
         self.down_tof_pub = self.create_publisher(LaserScan, "/grr/down_tof", 10)
-        
+        self.left_tof_pub = self.create_publisher(LaserScan, "/grr/left_tof", 10)
+        # self.left_tof.start_ranging()
+                
         self.line_follower = Line_Follower(self.i2c)
         self.line_timer = self.create_timer(1/30, self.line_array)
         self.line_publisher = self.create_publisher(Int64MultiArray, '/lineArray', 10)
         
+        self.angle_pub = self.create_publisher(Vector3, "/grr/magnometer", 10)
+        
+        self.magnometer = LIS3MDL(self.i2c, address=0x1e)
+
 
         self.servo_joint_names = ["bridge_latch_joint", "mechanism_lift_joint", "mechanism_package_joint", "mechanism_thruster_joint", "small_package_sweeper_joint"]
         params = [
@@ -160,7 +169,20 @@ class Robot(Node):
         tof_msg = LaserScan(range_min=.005,range_max=.1)
         tof_msg.ranges = [self.down_tof.range / 1000]
         self.down_tof_pub.publish(tof_msg)
-    
+        
+        x, y, z = self.magnometer.magnetic
+        self.angle_pub.publish(Vector3(x=x, y=y, z=z))
+        
+        
+        # try:
+        #     if self.left_tof.data_ready:
+        #         tof_msg.ranges = [self.left_tof.distance / 100]
+        #         self.left_tof.clear_interrupt()
+        #         self.left_tof_pub.publish(tof_msg)
+        # except OSError:
+        #     self.get_logger().info(f"WTF IT FAILED AGAIN BUT IT CANT KILL THE FUCKING NODE SO HERE WE ARE")
+        #     pass
+
 
         
 
