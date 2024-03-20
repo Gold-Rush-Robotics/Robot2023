@@ -88,7 +88,7 @@
       <parent link="small_package_sweeper_servo_link"/>
       <child link="small_package_sweeper_link"/>
       <axis xyz="1 0 0"/>
-      <limit effort="100" lower="-1.57" upper="1.57" velocity="0.5"/>
+      <limit effort="100" lower="-1.57" upper="1.57" velocity="10"/>
     </joint>
     <link name="small_package_sweeper_roller_link">
         <xacro:inertial_cylinder mass="${small_package_sweeper_roller_weight}" length="${small_package_sweeper_roller_height}" radius="${small_package_sweeper_roller_radius}">

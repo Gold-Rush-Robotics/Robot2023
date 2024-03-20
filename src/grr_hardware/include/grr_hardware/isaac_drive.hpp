@@ -71,9 +71,10 @@ private:
   double hw_stop_sec_;
 
   // Store the command for the simulated robot
-  std::vector<double> hw_commands_;
-  std::vector<double> hw_positions_;
-  std::vector<double> hw_velocities_;
+  std::vector<double> hw_commands_velocity_;
+  std::vector<double> hw_commands_effort_;
+  std::vector<double> hw_state_positions_;
+  std::vector<double> hw_state_velocities_;
   std::vector<std::string> joint_names_;
   std::map<std::string, uint> joint_names_map_;
 

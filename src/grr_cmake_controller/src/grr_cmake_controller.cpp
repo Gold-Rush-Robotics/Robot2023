@@ -68,10 +68,10 @@ CallbackReturn MecanumController::on_init()
   try
   {
     // with the lifecycle node being initialized, we can declare parameters
-    auto_declare<std::string>("front_left_joint", front_left_joint_name_);
-    auto_declare<std::string>("front_right_joint", front_right_joint_name_);
-    auto_declare<std::string>("rear_left_joint", rear_left_joint_name_);
-    auto_declare<std::string>("rear_right_joint", rear_right_joint_name_);
+    auto_declare<std::string>("front_left_joint", front_left_wheel_joint_name_);
+    auto_declare<std::string>("front_right_joint", front_right_wheel_joint_name_);
+    auto_declare<std::string>("rear_left_joint", rear_left_wheel_joint_name_);
+    auto_declare<std::string>("rear_right_joint", rear_right_wheel_joint_name_);
 
     auto_declare<double>("chassis_center_to_axle", wheel_params_.x_offset);
     auto_declare<double>("axle_center_to_wheel", wheel_params_.y_offset);
@@ -93,20 +93,20 @@ CallbackReturn MecanumController::on_init()
 InterfaceConfiguration MecanumController::command_interface_configuration() const
 {
   std::vector<std::string> conf_names;
-  conf_names.push_back(front_left_joint_name_ + "/" + HW_IF_VELOCITY);
-  conf_names.push_back(front_right_joint_name_ + "/" + HW_IF_VELOCITY);
-  conf_names.push_back(rear_left_joint_name_ + "/" + HW_IF_VELOCITY);
-  conf_names.push_back(rear_right_joint_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(front_left_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(front_right_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(rear_left_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(rear_right_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
   return {interface_configuration_type::INDIVIDUAL, conf_names};
 }
 
 InterfaceConfiguration MecanumController::state_interface_configuration() const
   {
     std::vector<std::string> conf_names;
-    conf_names.push_back(front_left_joint_name_ + "/" + HW_IF_VELOCITY);
-    conf_names.push_back(front_right_joint_name_ + "/" + HW_IF_VELOCITY);
-    conf_names.push_back(rear_left_joint_name_ + "/" + HW_IF_VELOCITY);
-    conf_names.push_back(rear_right_joint_name_ + "/" + HW_IF_VELOCITY);
+    conf_names.push_back(front_left_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
+    conf_names.push_back(front_right_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
+    conf_names.push_back(rear_left_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
+    conf_names.push_back(rear_right_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
     return {interface_configuration_type::INDIVIDUAL, conf_names};
   }
 
@@ -146,6 +146,14 @@ controller_interface::return_type MecanumController::update(
   Twist command = *last_command_msg;
   double & linear_x_cmd = command.twist.linear.x;
   double & linear_y_cmd = command.twist.linear.y;
+  if (this->fieldOrientationEnabled)
+    {
+      double robot_odom_orientation = odom->getHeading();
+      // RCLCPP_INFO(rclcpp::get_logger("TeleopTwistJoy"), "robot_orientation: %f", robot_odom_orientation);
+      double new_linear_x_cmd = linear_x_cmd * cos(robot_odom_orientation) + linear_y_cmd * sin(robot_odom_orientation);
+      linear_y_cmd = -1 * linear_x_cmd * sin(robot_odom_orientation) + linear_y_cmd * cos(robot_odom_orientation);
+      linear_x_cmd = new_linear_x_cmd;
+    }
   double & angular_cmd = command.twist.angular.z;
 
   double x_offset = wheel_params_.x_offset;
@@ -164,14 +172,14 @@ controller_interface::return_type MecanumController::update(
   const double rear_right_velocity = (rear_right_offset * angular_cmd + linear_x_cmd - linear_y_cmd) / radius;
 
   // Set Wheel Velocities
-  front_left_handle_->set_velocity(front_left_velocity);
-  front_right_handle_->set_velocity(front_right_velocity);
-  rear_left_handle_->set_velocity(rear_left_velocity);
-  rear_right_handle_->set_velocity(rear_right_velocity);
+  front_left_wheel_interface_handle_->set_velocity(front_left_velocity);
+  front_right_wheel_interface_handle_->set_velocity(front_right_velocity);
+  rear_left_wheel_interface_handle_->set_velocity(rear_left_velocity);
+  rear_right_wheel_interface_handle_->set_velocity(rear_right_velocity);
 
   //Update Odometry
-  odom->update(front_left_handle_->get_velocity(),front_right_handle_->get_velocity(),rear_left_handle_->get_velocity(),rear_right_handle_->get_velocity(),current_time);
-  // RCLCPP_INFO(logger,"wheel velocities: %f, %f, %f, %f",front_left_handle_->get_velocity(),front_right_handle_->get_velocity(),rear_left_handle_->get_velocity(),rear_right_handle_->get_velocity());
+  odom->update(front_left_wheel_interface_handle_->get_velocity(),front_right_wheel_interface_handle_->get_velocity(),rear_left_wheel_interface_handle_->get_velocity(),rear_right_wheel_interface_handle_->get_velocity(),current_time);
+  // RCLCPP_INFO(logger,"wheel velocities: %f, %f, %f, %f",front_left_wheel_interface_handle_->get_velocity(),front_right_wheel_interface_handle_->get_velocity(),rear_left_wheel_interface_handle_->get_velocity(),rear_right_wheel_interface_handle_->get_velocity());
   // RCLCPP_INFO(logger,"update called: %d",update);
   // RCLCPP_INFO(logger,"time: %f",time.seconds());
 
@@ -187,24 +195,24 @@ CallbackReturn MecanumController::on_configure(const rclcpp_lifecycle::State &)
   auto logger = get_node()->get_logger();
 
   // Get Parameters
-  front_left_joint_name_ = get_node()->get_parameter("front_left_joint").as_string();
-  front_right_joint_name_ = get_node()->get_parameter("front_right_joint").as_string();
-  rear_left_joint_name_ = get_node()->get_parameter("rear_left_joint").as_string();
-  rear_right_joint_name_ = get_node()->get_parameter("rear_right_joint").as_string();
+  front_left_wheel_joint_name_ = get_node()->get_parameter("front_left_joint").as_string();
+  front_right_wheel_joint_name_ = get_node()->get_parameter("front_right_joint").as_string();
+  rear_left_wheel_joint_name_ = get_node()->get_parameter("rear_left_joint").as_string();
+  rear_right_wheel_joint_name_ = get_node()->get_parameter("rear_right_joint").as_string();
 
-  if (front_left_joint_name_.empty()) {
+  if (front_left_wheel_joint_name_.empty()) {
     RCLCPP_ERROR(logger, "front_left_joint_name is not set");
     return CallbackReturn::ERROR;
   }
-  if (front_right_joint_name_.empty()) {
+  if (front_right_wheel_joint_name_.empty()) {
     RCLCPP_ERROR(logger, "front_right_joint_name is not set");
     return CallbackReturn::ERROR;
   }
-  if (rear_left_joint_name_.empty()) {
+  if (rear_left_wheel_joint_name_.empty()) {
     RCLCPP_ERROR(logger, "rear_left_joint_name is not set");
     return CallbackReturn::ERROR;
   }
-  if (rear_right_joint_name_.empty()) {
+  if (rear_right_wheel_joint_name_.empty()) {
     RCLCPP_ERROR(logger, "rear_right_joint_name is not set");
     return CallbackReturn::ERROR;
   }
@@ -287,12 +295,12 @@ CallbackReturn MecanumController::on_configure(const rclcpp_lifecycle::State &)
 
 CallbackReturn MecanumController::on_activate(const rclcpp_lifecycle::State &)
 {
-  front_left_handle_ = get_wheel(front_left_joint_name_);
-  front_right_handle_ = get_wheel(front_right_joint_name_);
-  rear_left_handle_ = get_wheel(rear_left_joint_name_);
-  rear_right_handle_ = get_wheel(rear_right_joint_name_);
+  front_left_wheel_interface_handle_ = get_wheel(front_left_wheel_joint_name_);
+  front_right_wheel_interface_handle_ = get_wheel(front_right_wheel_joint_name_);
+  rear_left_wheel_interface_handle_ = get_wheel(rear_left_wheel_joint_name_);
+  rear_right_wheel_interface_handle_ = get_wheel(rear_right_wheel_joint_name_);
 
-  if (!front_left_handle_ || !front_right_handle_ || !rear_left_handle_ || !rear_right_handle_)
+  if (!front_left_wheel_interface_handle_ || !front_right_wheel_interface_handle_ || !rear_left_wheel_interface_handle_ || !rear_right_wheel_interface_handle_)
   {
     return CallbackReturn::ERROR;
   }
@@ -348,10 +356,10 @@ CallbackReturn MecanumController::on_shutdown(const rclcpp_lifecycle::State &)
 
 void MecanumController::halt()
 {
-  front_left_handle_->set_velocity(0.0);
-  front_right_handle_->set_velocity(0.0);
-  rear_left_handle_->set_velocity(0.0);
-  rear_right_handle_->set_velocity(0.0);
+  front_left_wheel_interface_handle_->set_velocity(0.0);
+  front_right_wheel_interface_handle_->set_velocity(0.0);
+  rear_left_wheel_interface_handle_->set_velocity(0.0);
+  rear_right_wheel_interface_handle_->set_velocity(0.0);
   auto logger = get_node()->get_logger();
   RCLCPP_WARN(logger, "-----HALT CALLED : STOPPING ALL MOTORS-----");
 }

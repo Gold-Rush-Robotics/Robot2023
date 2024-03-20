@@ -47,12 +47,12 @@ class DriveTrain(Node):
         super().__init__('DriveTrain')
 
         # Define publishers
-        self.velocity_publisher = self.create_publisher(Twist, "grr_cmake_controller/cmd_vel_unstamped", 10)
+        self.velocity_publisher = self.create_publisher(Twist, "/grr_cmake_controller/cmd_vel_unstamped", 10)
         # TODO: Does a publisher have to have a hz rate? Like can I just publish when I want? Will publish true for this constantly mess up future trips?
         self.arrival_publisher = self.create_publisher(Bool, "arrived_at_goal", 10)
 
         # Define subscribers
-        self.odom_subscriber = self.create_subscription(Odometry, "odom", self.getOdom, 10)
+        self.odom_subscriber = self.create_subscription(Odometry, "/odom", self.getOdom, 10)
         self.goal_subscriber = self.create_subscription(Pose, "/drivetrain/goal", self.getGoal, 10)
         
         self.publish_subscriber = self.create_subscription(Bool, "/drivetrain/publish", self.publish_subscribe_callback, 10)
@@ -188,7 +188,7 @@ def main():
     #Define PID values
     xPID = [.5, 0, 0]
     yPID = [.4, 0, 0]
-    rotatePID = [1.28, 0, 0]
+    rotatePID = [1.145, 0, 0]
     
     rclpy.init()
 
