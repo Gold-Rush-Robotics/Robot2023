@@ -58,7 +58,8 @@ bool Odometry::update(double front_left_wheel_velocity,double front_right_wheel_
   timestamp_ = time;
   if (dt < 0.0001)
   {
-    return false;  // Interval too small to integrate with
+    RCLCPP_WARN(node_->get_logger(), "Time interval between odometry updates too small, skipping update.");
+    return false;
   }
 
   linear_x_ = (front_left_wheel_velocity + front_right_wheel_velocity + rear_left_wheel_velocity + rear_right_wheel_velocity)*wheel_radius_/4.0;
@@ -70,7 +71,8 @@ bool Odometry::update(double front_left_wheel_velocity,double front_right_wheel_
   x_ += (linear_x_ * cos(heading_) - linear_y_ * sin(heading_))*dt;
   y_ += (linear_x_ * sin(heading_) + linear_y_ * cos(heading_))*dt;
   heading_ += angular_z_*dt;
-  RCLCPP_INFO(node_->get_logger(), "x: %f, y: %f, heading: %f", x_, y_, heading_);
+  RCLCPP_INFO_ONCE(node_->get_logger(), "x: %f, y: %f, heading: %f", x_, y_, heading_);
+  RCLCPP_DEBUG_SKIPFIRST(node_->get_logger(), "x: %f, y: %f, heading: %f", x_, y_, heading_);
   publish();
   return true;
 }
@@ -94,6 +96,7 @@ void Odometry::setOdometry(double x, double y, double quat_x, double quat_y, dou
   y_ = y;
   heading_ = QuaternionToYaw(quat_x, quat_y, quat_z, quat_w);
 }
+
 double Odometry::QuaternionToYaw(double x, double y, double z, double w)
 {
   double siny_cosp = 2 * (w * z + x * y);
