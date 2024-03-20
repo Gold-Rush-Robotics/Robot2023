@@ -5,20 +5,14 @@ import rclpy
 from rclpy.node import Node
 import time
 
-
-
-#msg imports
 from sensor_msgs.msg import Range, JointState
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist, Pose
 from trajectory_msgs.msg import JointTrajectory 
 from std_msgs.msg import Bool, Float32
-
-
 class Action:
     nextAction : Action
     name: str
-
     def __init__(self) -> None:
         self.name = self.__class__.__name__
         self.nextAction = self

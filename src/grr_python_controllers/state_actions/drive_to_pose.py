@@ -6,9 +6,6 @@ import time
 from geometry_msgs.msg import Twist, Pose
 
 from state_actions.action import Action
-
-# This action is meant to take care of placing the April tags in the beginning
-
 class DriveToPose(Action):
     def __init__(self, pose:Pose, name:str=None):
         super().__init__()

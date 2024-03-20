@@ -7,9 +7,6 @@ from geometry_msgs.msg import Twist, Pose
 from std_msgs.msg import Bool
 
 from state_actions.action import Action
-
-# This action is meant to take care of placing the April tags in the beginning
-
 class CornerReset(Action):
     def __init__(self, reset_pose:Pose):
         super().__init__()

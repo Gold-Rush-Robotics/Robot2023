@@ -9,9 +9,6 @@ from std_msgs.msg import Bool
 from state_actions.action import Action
 
 import numpy as np
-
-# This action is meant to take care of placing the April tags in the beginning
-
 class DriveToGap(Action):
     def __init__(self, name:str=None):
         super().__init__()
