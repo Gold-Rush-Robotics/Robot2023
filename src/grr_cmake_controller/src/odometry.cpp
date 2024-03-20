@@ -55,8 +55,6 @@ bool Odometry::update(double front_left_wheel_velocity,double front_right_wheel_
 {
   // We cannot estimate the speed with very small time intervals:
   double dt = time.seconds() - timestamp_.seconds();
-
-  RCLCPP_INFO(node_->get_logger(), "time: %f", time);
   timestamp_ = time;
   if (dt < 0.0001)
   {
@@ -72,7 +70,8 @@ bool Odometry::update(double front_left_wheel_velocity,double front_right_wheel_
   x_ += (linear_x_ * cos(heading_) - linear_y_ * sin(heading_))*dt;
   y_ += (linear_x_ * sin(heading_) + linear_y_ * cos(heading_))*dt;
   heading_ += angular_z_*dt;
-  RCLCPP_INFO(node_->get_logger(), "x: %f, y: %f, heading: %f", x_, y_, heading_);
+  RCLCPP_INFO_ONCE(node_->get_logger(), "x: %f, y: %f, heading: %f", x_, y_, heading_);
+  RCLCPP_DEBUG_SKIPFIRST(node_->get_logger(), "x: %f, y: %f, heading: %f", x_, y_, heading_);
   publish();
   return true;
 }

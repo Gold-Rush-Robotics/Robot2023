@@ -101,14 +101,14 @@ public:
 
 protected:
   std::shared_ptr<Wheel> get_wheel(const std::string & wheel_name);
-  std::shared_ptr<Wheel> front_left_handle_;
-  std::shared_ptr<Wheel> front_right_handle_;
-  std::shared_ptr<Wheel> rear_left_handle_;
-  std::shared_ptr<Wheel> rear_right_handle_;
-  std::string front_left_joint_name_;
-  std::string front_right_joint_name_;
-  std::string rear_left_joint_name_;
-  std::string rear_right_joint_name_;
+  std::shared_ptr<Wheel> front_left_wheel_interface_handle_;
+  std::shared_ptr<Wheel> front_right_wheel_interface_handle_;
+  std::shared_ptr<Wheel> rear_left_wheel_interface_handle_;
+  std::shared_ptr<Wheel> rear_right_wheel_interface_handle_;
+  std::string front_left_wheel_joint_name_;
+  std::string front_right_wheel_joint_name_;
+  std::string rear_left_wheel_joint_name_;
+  std::string rear_right_wheel_joint_name_;
   std::shared_ptr<Odometry> odom = std::make_shared<Odometry>();
   std::shared_ptr<bool> fieldOrientationEnabled = std::make_shared<bool>(true);
 

@@ -62,8 +62,8 @@ hardware_interface::CallbackReturn IsaacDriveHardware::on_init(const hardware_in
 
   // hw_start_sec_ = stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
   // hw_stop_sec_ = stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
-  hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  hw_state_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  hw_state_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_velocity_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_commands_effort_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
@@ -127,9 +127,9 @@ std::vector<hardware_interface::StateInterface> IsaacDriveHardware::export_state
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_positions_[i]));
+      info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_state_positions_[i]));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_velocities_[i]));
+      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_state_velocities_[i]));
   }
 
   return state_interfaces;
@@ -173,12 +173,12 @@ hardware_interface::CallbackReturn IsaacDriveHardware::on_activate(
   RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Activating ...please wait...");
 
   // set some default values
-  for (auto i = 0u; i < hw_positions_.size(); i++)
+  for (auto i = 0u; i < hw_state_positions_.size(); i++)
   {
-    if (std::isnan(hw_positions_[i]))
+    if (std::isnan(hw_state_positions_[i]))
     {
-      hw_positions_[i] = 0;
-      hw_velocities_[i] = 0;
+      hw_state_positions_[i] = 0;
+      hw_state_velocities_[i] = 0;
       hw_commands_velocity_[i] = 0;
       hw_commands_effort_[i] = 0;
     }
@@ -230,8 +230,8 @@ hardware_interface::return_type grr_hardware::IsaacDriveHardware::read(const rcl
   for (auto i = 0u; i < names.size(); i++) {
     uint p = joint_names_map_[names[i]];
     if (p > 0) {
-      hw_positions_[p - 1] = positions[i];
-      hw_velocities_[p - 1] = ticksToMeters(velocities[i]);
+      hw_state_positions_[p - 1] = positions[i];
+      hw_state_velocities_[p - 1] = ticksToMeters(velocities[i]);
     }
   }
   

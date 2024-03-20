@@ -169,8 +169,6 @@ class StateMachine(Node):
         self.position = Pose()
 
         # I define a goal that can be modified throughout the program and sent when new goals are needed
-        self.goal = Pose()
-
         self.current_motor_effort = Float64MultiArray()
         
         self.bools = defaultdict(lambda: False)
