@@ -148,10 +148,10 @@ controller_interface::return_type MecanumController::update(
   double & linear_y_cmd = command.twist.linear.y;
   if (this->fieldOrientationEnabled)
     {
-      double robot_imu_orientation = odom->getHeading();
-      // RCLCPP_INFO(rclcpp::get_logger("TeleopTwistJoy"), "robot_orientation: %f", robot_imu_orientation);
-      double new_linear_x_cmd = linear_x_cmd * cos(robot_imu_orientation) + linear_y_cmd * sin(robot_imu_orientation);
-      linear_y_cmd = -1 * linear_x_cmd * sin(robot_imu_orientation) + linear_y_cmd * cos(robot_imu_orientation);
+      double robot_odom_orientation = odom->getHeading();
+      // RCLCPP_INFO(rclcpp::get_logger("TeleopTwistJoy"), "robot_orientation: %f", robot_odom_orientation);
+      double new_linear_x_cmd = linear_x_cmd * cos(robot_odom_orientation) + linear_y_cmd * sin(robot_odom_orientation);
+      linear_y_cmd = -1 * linear_x_cmd * sin(robot_odom_orientation) + linear_y_cmd * cos(robot_odom_orientation);
       linear_x_cmd = new_linear_x_cmd;
     }
   double & angular_cmd = command.twist.angular.z;

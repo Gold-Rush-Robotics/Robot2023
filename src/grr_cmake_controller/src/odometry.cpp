@@ -58,7 +58,8 @@ bool Odometry::update(double front_left_wheel_velocity,double front_right_wheel_
   timestamp_ = time;
   if (dt < 0.0001)
   {
-    //return false;  // Interval too small to integrate with
+    RCLCPP_WARN(node_->get_logger(), "Time interval between odometry updates too small, skipping update.");
+    return false;
   }
 
   linear_x_ = (front_left_wheel_velocity + front_right_wheel_velocity + rear_left_wheel_velocity + rear_right_wheel_velocity)*wheel_radius_/4.0;
