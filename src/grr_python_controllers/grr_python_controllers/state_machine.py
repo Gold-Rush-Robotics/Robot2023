@@ -7,7 +7,7 @@ import time
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist, Pose, Point, Quaternion, Twist, Vector3
 from trajectory_msgs.msg import JointTrajectory 
-from std_msgs.msg import Bool, Float64, Float64MultiArray
+from std_msgs.msg import Bool, Float64, Float64MultiArray, String
 from sensor_msgs.msg import JointState, LaserScan
 
 from collections import defaultdict
@@ -27,10 +27,16 @@ class StateMachine(Node):
     def __init__(self):
         super().__init__('State_Machine')
         
+        self.promo_display = False
+        
+        def set_true(): self.promo_display=True
+        
         # self.action_tree = ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechansim_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 0.0, 100.0]), 1, name="starting positions")
         self.action_tree = ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 50.0, 0.0, 100.0]), 1, name="starting positions")
         self.action_tree.setNext(
             CornerReset(Pose())
+        ).setNext(
+            Action(function=set_true)
         ).setNext(
             WaitForStart()
         ).setNext(    
@@ -163,8 +169,6 @@ class StateMachine(Node):
         self.new_pose = self.create_publisher(Pose, "/pose", 10)
         self.effort_pub = self.create_publisher(Float64MultiArray, '/effort_controller/commands', 10)
         self.raw_cmd = self.create_publisher(Twist, "/grr_cmake_controller/cmd_vel_unstamped", 10) 
-        
-             
 
         self.position = Pose()
 
@@ -179,6 +183,14 @@ class StateMachine(Node):
         self.runner_timer = self.create_timer(1/30.0, self.runner)
         
         self.current_action_name = ""
+        
+        self.current_action_pub = self.create_publisher(String, "/grr/state_name", 10)
+        
+        self.promo_pub = self.create_publisher(Bool, "/grr/promo_display", 10)
+        self.promo_timer = self.create_timer(1, self.promo_timer_loop)
+        
+    def promo_timer_loop(self):
+        self.promo_pub.publish(Bool(data=self.promo_display))
         
     def magnent_callback(self, msg:Vector3):
         self.get_logger().info(f"{msg}")
@@ -195,6 +207,7 @@ class StateMachine(Node):
         if self.action_tree.name != self.current_action_name:
             self.get_logger().info(f"Starting: {self.action_tree.name}")
             self.current_action_name = self.action_tree.name
+        self.current_action_pub.publish(String(data=self.current_action_name))
         
     def bool_callback(self, msg:Bool, name:str):
         self.bools[name] = msg.data

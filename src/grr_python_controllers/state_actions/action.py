@@ -10,12 +10,16 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist, Pose
 from trajectory_msgs.msg import JointTrajectory 
 from std_msgs.msg import Bool, Float32
+
+from typing import Callable
+
 class Action:
     nextAction : Action
     name: str
-    def __init__(self) -> None:
+    def __init__(self, function: Callable = None) -> None:
         self.name = self.__class__.__name__
         self.nextAction = self
+        self.function = function
 
     def setNext(self, nextAction: Action):
         nextAction.nextAction = self.nextAction
@@ -30,4 +34,7 @@ class Action:
             return self.nextAction
         
     def run(self, node:Node):
+        if self.function:
+            self.function()
+            return self.nextAction
         return self
