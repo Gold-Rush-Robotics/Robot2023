@@ -160,18 +160,29 @@ class Robot(Node):
         self.line_publisher.publish(Int64MultiArray(data=vals))
         
     def sensor_loop(self):
-        threshold = self.get_parameter('LED_Threshold').get_parameter_value().integer_value
-        color_rgb = self.back_sensor.color_rgb_bytes
-        msg = Bool()
-        msg.data = color_rgb[0] >= threshold
-        self.start_light_publisher.publish(msg)
         
-        tof_msg = LaserScan(range_min=.005,range_max=.1)
-        tof_msg.ranges = [self.down_tof.range / 1000]
-        self.down_tof_pub.publish(tof_msg)
+        try:
+            threshold = self.get_parameter('LED_Threshold').get_parameter_value().integer_value
+            color_rgb = self.back_sensor.color_rgb_bytes
+            msg = Bool()
+            msg.data = color_rgb[0] >= threshold
+            self.start_light_publisher.publish(msg)
+        except OSError as e:
+            self.get_logger().warning(f"BACK COLOR FAILED {e}")
         
-        x, y, z = self.magnometer.magnetic
-        self.angle_pub.publish(Vector3(x=x, y=y, z=z))
+        
+        try:
+            tof_msg = LaserScan(range_min=.005,range_max=.1)
+            tof_msg.ranges = [self.down_tof.range / 1000]
+            self.down_tof_pub.publish(tof_msg)
+        except OSError as e:
+            self.get_logger().warning(f"DOWN TOF FAILED {e}")
+        
+        try:
+            x, y, z = self.magnometer.magnetic
+            self.angle_pub.publish(Vector3(x=x, y=y, z=z))
+        except OSError as e:
+            self.get_logger().warning(f"MAGNOMETER FAILED {e}")
         
         
         # try:

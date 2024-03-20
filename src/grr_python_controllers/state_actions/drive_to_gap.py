@@ -40,14 +40,14 @@ class DriveToGap(Action):
         if self.state >= 2:
             node.raw_cmd.publish(Twist(linear=Vector3(x=-0.05)))
         else:
-            node.raw_cmd.publish(Twist(linear=Vector3(x=-0.4)))
+            node.raw_cmd.publish(Twist(linear=Vector3(x=-0.42)))
             
         if self.state == 0:
-            if reading >= 95.0:
+            if reading >= 92.0:
                 self.state = 1
         if self.state == 1:
             print("HELLO")
-            if reading <= 94.0:
+            if reading <= 91.0:
                 print("this shouldnt print")
                 self.state = 2
     
