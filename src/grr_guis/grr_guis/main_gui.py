@@ -1,6 +1,7 @@
 from PyQt5.QtCore import Qt, QEventLoop, QUrl
 import rclpy
 from rclpy.node import Node
+from ament_index_python.packages import get_package_share_directory
 import PyQt5
 from PyQt5.QtWidgets import QSizePolicy, QApplication, QWidget, QPushButton, QVBoxLayout, QLabel, QMainWindow, QHBoxLayout, QListWidget, QListWidgetItem, QFileDialog
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
@@ -8,6 +9,7 @@ from PyQt5.QtMultimediaWidgets import QVideoWidget
 import sys
 from std_msgs.msg import Bool, String 
 from PyQt5.QtGui import QPixmap
+
 
 
 class GRR_Window(QMainWindow):
@@ -27,6 +29,7 @@ class GRR_Window(QMainWindow):
 
         horiz_layout = QHBoxLayout()
         
+        
         self.videoWidget = QVideoWidget()
         self.videoWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
@@ -38,7 +41,7 @@ class GRR_Window(QMainWindow):
         self.main_pane.addWidget(self.label)
         self.main_pane.addWidget(self.button)
         
-        #main_pane.addWidget(videoWidget)
+        # self.main_pane.addWidget(self.videoWidget)
 
         self.loadVideoButton = QPushButton('Load and Play Video')
         self.main_pane.addWidget(self.loadVideoButton)
@@ -53,7 +56,6 @@ class GRR_Window(QMainWindow):
         self.player.setVideoOutput(self.videoWidget)
         #self.setCentralWidget(videoWidget)
 
-        #self.promoVid2()
 
         self.loadVideoButton.clicked.connect(self.promoVid2)
 
@@ -75,15 +77,16 @@ class GRR_Window(QMainWindow):
         print("Error:", error)
 
     def promoVid2(self):
-        fileName,_ = QFileDialog.getOpenFileName(self, ".","Images (*.mp4) (*.avi) (*.png)")
+        # fileName,_ = QFileDialog.getOpenFileName(self, ".","Images (*.mp4) (*.avi) (*.png)")
+        fileName = get_package_share_directory('grr_guis') + '/multimedia/grr_logo.mp4'
         print(fileName)
-        if fileName != '':
-                content = QUrl.fromLocalFile(fileName)
-                print(content)              
-                self.player.setMedia(QMediaContent(content))
-                self.player.play()
-                self.videoWidget.setFullScreen(True)
-    
+        # if fileName != '':
+        content = QUrl.fromLocalFile(fileName)
+        print(content)              
+        self.player.setMedia(QMediaContent(content))
+        self.player.play()
+        self.videoWidget.setFullScreen(True)
+
 class Gui(Node):
     def __init__(self, application:QApplication, window:GRR_Window) -> None:
         super().__init__("GUI")
