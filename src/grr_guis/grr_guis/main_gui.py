@@ -85,13 +85,14 @@ class GRR_Window(QMainWindow):
         print(content)              
         self.player.setMedia(QMediaContent(content))
         self.player.play()
-        self.videoWidget.setFullScreen(True)
-
+        
+    
 class Gui(Node):
     def __init__(self, application:QApplication, window:GRR_Window) -> None:
         super().__init__("GUI")
         self.test_publisher = self.create_publisher(Bool, "test", 10)
         self.test_label = self.create_subscription(String, "test_str", self.display_test, 10)
+        self.start_video = self.create_subscription(Bool, "/grr/promo_display", self.run_video, 10)
         self.gui_loop_timer = self.create_timer(.1, self.gui_loop)
         self.app = application
         self.window = window
@@ -104,6 +105,10 @@ class Gui(Node):
     def send_test(self, checked):
         self.window.button.setText(f"Ready to Start? {'Yes' if checked else 'No '}")
         self.test_publisher.publish(Bool(data=checked))
+        
+    def run_video(self, msg:Bool):
+        if msg.data:
+            self.window.promoVid2()
     
     def display_test(self, msg:String):
         print(msg)
