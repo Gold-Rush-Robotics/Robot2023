@@ -28,12 +28,8 @@ class StateMachine(Node):
         super().__init__('State_Machine')
         
         self.promo_display = False
-        self.relay = False
         
         def set_true(): self.promo_display=True
-        def relay_func_on():self.relay = True
-        def relay_func_off():self.relay = False
-        
         
         # self.action_tree = ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechansim_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 0.0, 100.0]), 1, name="starting positions")
         self.action_tree = ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 50.0, 0.0, 100.0]), 1, name="starting positions")

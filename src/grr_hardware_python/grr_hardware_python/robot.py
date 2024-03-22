@@ -82,7 +82,6 @@ class Robot(Node):
         # self.left_tof = VL53L4CD(self.tca[3])
         self.down_tof_pub = self.create_publisher(LaserScan, "/grr/down_tof", 10)
         self.left_tof_pub = self.create_publisher(LaserScan, "/grr/left_tof", 10)
-        
         # self.left_tof.start_ranging()
                 
         self.line_follower = Line_Follower(self.i2c)

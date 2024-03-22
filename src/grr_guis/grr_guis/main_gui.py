@@ -61,7 +61,6 @@ class GRR_Window(QMainWindow):
         self.main_pane.addWidget(self.state_machine_button)
         self.main_pane.addWidget(self.start_button)
         
-        
         # self.main_pane.addWidget(self.videoWidget)
         horiz_layout.addLayout(self.main_pane)
         horiz_layout.addLayout(self.middle_pane)
