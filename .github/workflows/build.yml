@@ -1,0 +1,14 @@
+name: Ros2 Build
+on:
+    - push
+    - pull_request
+
+jobs:
+    test:
+        runs-on: ubuntu-latest 
+        steps:
+            - uses: actions/checkout@v2
+            - name: build docker container
+              run: docker buildx build -t local .
+            - name: rosdep install and colcon build
+              run: docker run local /bin/bash -c "source /opt/ros/humble/setup.bash && rosdep install --from-paths src -y --ignore-src --rosdistro humble && colcon build --symlink-install"
