@@ -45,18 +45,18 @@ class StateMachine(Node):
             MotorAction(Float64MultiArray(data=[100.0, -100.0]))
         ).setNext(
             # ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 0.0, 5.0]), 1, name="Cube Pickup Positions")
-            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, 100.0, 0.0, 0.0]), .5, name="Cube Pickup Positions")
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[98.0, 100.0, 100.0, 0.0, 0.0]), .5, name="Cube Pickup Positions")
         ).setNext(
             DriveToPose(Pose(position=Point()), name="into cubes")
         ).setNext(
             # ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 0.0, 0.0]), 1, name="Squeeze")
-            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, -10.0, 0.0, 0.0]), .5, name="Squeeze")
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[98.0, 100.0, -10.0, 0.0, 0.0]), .5, name="Squeeze")
         ).setNext(
             DriveToPose(Pose(position=Point(y=0.03)), name="back up to lift")
         ).setNext(
-            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[97.0, 100.0, -10.0, 0.0, 80.0]), .25, name="Lift")
+            ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[98.0, 100.0, -10.0, 0.0, 80.0]), .25, name="Lift")
         ).setNext(
-            DriveToPose(Pose(position=Point(y=-0.14)), name="into the wall")
+            DriveToPose(Pose(position=Point()), name="into the wall")
         ).setNext(
             DriveToPose(Pose(position=Point(x=0.05, y=0.12)), name="north wall")
         ).setNext(
@@ -211,7 +211,6 @@ class StateMachine(Node):
         
     def promo_timer_loop(self):
         self.promo_pub.publish(Bool(data=self.promo_display))
-        self.relay_pub.publish(Bool(data=self.relay))
         
     def magnent_callback(self, msg:Vector3):
         self.magnent_data = msg

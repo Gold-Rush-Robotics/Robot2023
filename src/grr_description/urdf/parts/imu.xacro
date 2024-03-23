@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="imu" params="parent origin">
+    <link name="imu_holder_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.01" length="0.02"/>
+        </geometry>
+        <material name="grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.01" length="0.02"/>
+        </geometry>
+      </collision>
+    <joint name="imu_holder_joint" type="fixed">
+      <origin xyz="${origin}" rpy="0 0 0"/>
+      <parent link="${parent}"/>
+      <child link="imu_holder_link"/>
+    </joint>
+    <link name="imu_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${radius}" length="${length}"/>
+        </geometry>
+        <material name="grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="${radius}" length="${length}"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="imu_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <parent link="imu_holder_link"/>
+      <child link="imu_link"/>
+    </joint>
+  </xacro:macro>
+</robot>

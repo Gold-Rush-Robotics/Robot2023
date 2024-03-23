@@ -10,12 +10,13 @@ from adafruit_pca9685 import PCA9685
 from adafruit_tca9548a import TCA9548A
 from adafruit_tcs34725 import TCS34725
 from adafruit_vl6180x import VL6180X
-from adafruit_vl53l4cd import VL53L4CD
 from adafruit_lis3mdl import LIS3MDL
+from adafruit_lsm6ds.lsm6ds33 import LSM6DS33
 
 
-from sensor_msgs.msg import JointState, LaserScan
-from std_msgs.msg import Int64MultiArray, Bool, String
+
+from sensor_msgs.msg import JointState, LaserScan, Imu, MagneticField
+from std_msgs.msg import Int64MultiArray, Bool, String, Header
 from geometry_msgs.msg import Vector3
 
 from rcl_interfaces.msg import SetParametersResult
@@ -87,10 +88,9 @@ class Robot(Node):
         self.line_follower = Line_Follower(self.i2c)
         self.line_timer = self.create_timer(1/30, self.line_array)
         self.line_publisher = self.create_publisher(Int64MultiArray, '/lineArray', 10)
-        
-        self.angle_pub = self.create_publisher(Vector3, "/grr/magnometer", 10)
-        
+                
         self.magnometer = LIS3MDL(self.i2c, address=0x1e)
+        self.gyro = LSM6DS33(self.i2c, address=0x6b)
         
         
         self.debug_pub = self.create_publisher(String, "/grr/debug", 10)
@@ -125,6 +125,9 @@ class Robot(Node):
     
         self.joint_state_subscriber = self.create_subscription(JointState, "/grr/joint_command", self.joint_command_callback, 10)
         self.relay_sub = self.create_subscription(Bool, "/grr/relay", self.relay_callback, 10)
+        
+        self.magnometer_pub = self.create_publisher(MagneticField, "/imu/mag", 10)
+        self.imu_pub = self.create_publisher(Imu, "/imu/data_raw", 10)
         
     def relay_callback(self, msg:Bool):
         self.get_logger().info(f"{msg}")
@@ -195,7 +198,24 @@ class Robot(Node):
         
         try:
             x, y, z = self.magnometer.magnetic
-            self.angle_pub.publish(Vector3(x=x, y=y, z=z))
+            mf_msg = MagneticField()
+            imu_msg = Imu()
+            head = Header()
+            head.frame_id = "imu_link"
+            mf_msg.header = head
+            imu_msg.header = head
+            mf_msg.magnetic_field = Vector3(x=x/(10^6), y=y/(10^6), z=z/(10^6))
+            
+            ax, ay, az = self.gyro.acceleration #m/s^2
+            gx, gy, gz = self.gyro.gyro # rad / s
+            
+            imu_msg.angular_velocity = Vector3(x=gx, y=gy, z=gz)
+            imu_msg.linear_acceleration = Vector3(x=ax, y=ay, z=az)
+            
+            self.magnometer_pub.publish(mf_msg)
+            self.imu_pub.publish(imu_msg)
+            
+            
         except OSError as e:
             self.get_logger().warning(f"MAGNOMETER FAILED {e}")
         
