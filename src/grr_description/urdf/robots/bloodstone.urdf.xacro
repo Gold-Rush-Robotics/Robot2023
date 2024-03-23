@@ -12,7 +12,7 @@
   <xacro:include filename="$(find grr_description)/urdf/parts/small_package_sweeper.xacro"/>
   <xacro:include filename="$(find grr_description)/urdf/parts/bridge.xacro"/>
   <xacro:include filename="$(find grr_description)/urdf/parts/lidar.xacro"/>
-  <xacro:include filename="$(find grr_description)/urdf/parts/imu.xacro"/>
+  <!-- <xacro:include filename="$(find grr_description)/urdf/parts/imu.xacro"/> -->
   <xacro:include filename="$(find grr_description)/urdf/parts/zed_cam.xacro"/>
   <xacro:include filename="$(find grr_description)/urdf/parts/usb_camera.xacro"/>
   <xacro:include filename="$(find grr_description)/urdf/control/drive.xacro"/>
@@ -112,12 +112,12 @@
     parent="chassis_link"
     origin="0.0 -0.08 0.145"
   />
-  <xacro:imu 
+  <!-- <xacro:imu 
     parent="camera_stand_link"
     origin="0 0 0.1"
     radius="0.01"
     length="0.02"
-  />
+  /> -->
   <!-- <xacro:lidar
     radius="${lidar_radius}"
     length="${lidar_length}"

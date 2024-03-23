@@ -130,6 +130,7 @@ class Gui(Node):
         self.drive_train_enable = not checked
         self.effort_pub.publish(Float64MultiArray(data=[0.0, 0.0]))
         self.raw_cmd.publish(Twist())
+        self.drivetrain_enable.publish(Bool(data=not checked))
         
     def send_start(self, checked):
         self.window.start_button.setText(f"Ready to Start? {'Yes' if checked else 'No '}")
@@ -166,7 +167,7 @@ class Gui(Node):
         nodes = [((y + "/") if not y  == "/" else "/") + x for x,y in self.get_node_names_and_namespaces()]
         if not nodes == self.previous_nodes:
             self.display_nodes(nodes)
-        self.drivetrain_enable.publish(Bool(data=self.drive_train_enable))
+
             
 
 def main():

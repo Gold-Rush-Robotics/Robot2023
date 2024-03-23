@@ -137,6 +137,20 @@ class StateMachine(Node):
             Action()
         )
         
+        self.action_tree.setNext(
+            CornerReset(Pose(position=Point(x=1.40, y=0.55)))
+        ).setNext(
+            DriveToGap()
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=1.24, y=0.55)), name="back up for bridge") #CHANGE Y
+        ).setNext(
+            ServoAction(JointState(name=['bridge_latch_joint'], position=[0.0]), 1, "Drop Bridge")
+        ).setNext(
+            DriveToPose(Pose(position=Point(x=-0.1,y=0.55)), name="across the bridge into the wall")
+        ).setNext(
+            Action()
+        )
+        
         # self.action_tree.setNext(
         #     ServoAction(JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 35.0, 0.0, 0.0]), 2, name="Go down for thrusters")
         # ).setNext(

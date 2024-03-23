@@ -73,7 +73,7 @@ class Robot(Node):
         self.relay = digitalio.DigitalInOut(board.D6)
         self.relay.direction = digitalio.Direction.OUTPUT
         
-        self.sensor_loop_timer = self.create_timer(.1, self.sensor_loop)
+        self.sensor_loop_timer = self.create_timer(1/40., self.sensor_loop)
         
         self.back_sensor = TCS34725(self.tca[1])
         self.start_light_publisher = self.create_publisher(Bool, "/grr/start_light", 10) 
@@ -177,13 +177,13 @@ class Robot(Node):
         
     def sensor_loop(self):
         
+        gui_str = ""
+        
         try:
             threshold = self.get_parameter('LED_Threshold').get_parameter_value().integer_value
             color_rgb = self.back_sensor.color_rgb_bytes
             msg = Bool()
             msg.data = color_rgb[1] >= threshold
-            str_msg = String(data=str(color_rgb))
-            self.debug_pub.publish(str_msg) 
             self.start_light_publisher.publish(msg)
         except OSError as e:
             self.get_logger().warning(f"BACK COLOR FAILED {e}")
@@ -193,6 +193,7 @@ class Robot(Node):
             tof_msg = LaserScan(range_min=.005,range_max=.1)
             tof_msg.ranges = [self.down_tof.range / 1000]
             self.down_tof_pub.publish(tof_msg)
+            gui_str += str(tof_msg.ranges) 
         except OSError as e:
             self.get_logger().warning(f"DOWN TOF FAILED {e}")
         
@@ -204,20 +205,23 @@ class Robot(Node):
             head.frame_id = "imu_link"
             mf_msg.header = head
             imu_msg.header = head
-            mf_msg.magnetic_field = Vector3(x=x/(10^6), y=y/(10^6), z=z/(10^6))
+            mf_msg.magnetic_field = Vector3(x=(x - 46.30225080385853)/(10^6), y=(y+48.72113417129494)/(10^6), z=(z-213.32943583747442)/(10^6))
             
             ax, ay, az = self.gyro.acceleration #m/s^2
             gx, gy, gz = self.gyro.gyro # rad / s
             
-            imu_msg.angular_velocity = Vector3(x=gx, y=gy, z=gz)
+            imu_msg.angular_velocity = Vector3(x=gx-0.002748893571891069, y=gy+0.08697193828844244, z=gz-0.18639025580516944)
             imu_msg.linear_acceleration = Vector3(x=ax, y=ay, z=az)
             
             self.magnometer_pub.publish(mf_msg)
-            self.imu_pub.publish(imu_msg)
+            self.imu_pub.publish(imu_msg)            
+        
             
             
         except OSError as e:
             self.get_logger().warning(f"MAGNOMETER FAILED {e}")
+            
+        self.debug_pub.publish(String(data=gui_str))
         
         
         # try:
