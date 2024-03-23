@@ -51,12 +51,12 @@ class DriveToGap(Action):
                     print("OVER THE EDGE")
                     self.state = 2
             case 2: # flat top of hill
-                speed = -0.1 - ((30 - self.timesThroughState)) * 0.01
+                speed = -0.1 - ((30 - self.timesThroughState)) * 0.003
                 self.timesThroughState += 1
                 if self.timesThroughState >= 30:
                     self.state = 3
             case 3:
-                if reading >= 0.015:
+                if reading >= 0.014:
                     speed = 0.0
                     self.reset_on_edge(node)
                     return self.nextAction

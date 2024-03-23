@@ -58,12 +58,22 @@ def generate_launch_description():
         namespace='grr'
     )
     
+    state_machine = Node(
+        package='grr_python_controllers',
+        executable='state_machine',
+        name='State_Machine',
+        output='screen',
+        emulate_tty=True,
+        namespace=''
+    )
+    
     return LaunchDescription([
         roboclaws,
         motor_controllers,
         robot,
         drive_train,
-        gui
+        gui,
+        state_machine
     ])
     
     

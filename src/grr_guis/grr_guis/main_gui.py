@@ -19,20 +19,22 @@ class GRR_Window(QMainWindow):
         super().__init__()
         
         self.setWindowTitle("GRR SECON APP")
-        self.start_button = QPushButton("Ready to start? No ")
-        self.start_button.setFixedHeight(60)
+        self.start_button = QPushButton("Ready: \nNo")
+        self.start_button.setFixedHeight(120)
         self.start_button.setCheckable(True)     
         
-        self.kill_motors_button = QPushButton("Drivetrain Goals: Yes")  
+        self.kill_motors_button = QPushButton("Drive: \nEnabled")  
         self.kill_motors_button.setCheckable(True)
         self.kill_motors_button.setFixedHeight(120)
         
         self.reset_servos_button = QPushButton("Reset Servos")
-        self.reset_servos_button.setFixedHeight(60)
+        self.reset_servos_button.setFixedHeight(120)
         
-        self.state_machine_button = QPushButton("Launch State Machine")
-        self.state_machine_button.setCheckable(True)
-        self.state_machine_button.setFixedHeight(60)
+        self.bridge_button = QPushButton("Bridge O")
+        self.bridge_button.setFixedHeight(120)
+        
+        self.start_without_light_button = QPushButton("FUCK")
+        self.start_without_light_button.setFixedHeight(60)
         
         self.debug_label = QLabel("DEBUG VALUES")
         
@@ -55,11 +57,18 @@ class GRR_Window(QMainWindow):
         self.middle_pane.addWidget(self.label)
         
         self.main_pane = QVBoxLayout()
-        self.main_pane.addWidget(self.debug_label)
-        self.main_pane.addWidget(self.kill_motors_button)
-        self.main_pane.addWidget(self.reset_servos_button)
-        self.main_pane.addWidget(self.state_machine_button)
-        self.main_pane.addWidget(self.start_button)
+        
+        top_button_tray = QHBoxLayout()
+        top_button_tray.addWidget(self.bridge_button)
+        top_button_tray.addWidget(self.reset_servos_button)
+        
+        middle_button_tray = QHBoxLayout()
+        middle_button_tray.addWidget(self.kill_motors_button)
+        middle_button_tray.addWidget(self.start_button)
+        
+        self.main_pane.addLayout(top_button_tray)
+        self.main_pane.addLayout(middle_button_tray)
+        self.main_pane.addWidget(self.start_without_light_button)
         
         # self.main_pane.addWidget(self.videoWidget)
         horiz_layout.addLayout(self.main_pane)
@@ -107,33 +116,40 @@ class Gui(Node):
         self.drive_train_enable = True
         
         self.reset_command = JointState(name=['small_package_sweeper_joint', 'bridge_latch_joint', 'mechanism_package_joint', 'mechanism_thruster_joint', 'mechanism_lift_joint'], position=[0.0, 100.0, 50.0, 0.0, 100.0])
-
+        self.bridge_command = JointState(name=['bridge_latch_joint'], position=[-30.0])
         self.servo_pub = self.create_publisher(JointState, "/grr/joint_command", 10)
         
         self.effort_pub = self.create_publisher(Float64MultiArray, '/effort_controller/commands', 10)
         self.raw_cmd = self.create_publisher(Twist, "/grr_cmake_controller/cmd_vel_unstamped", 10) 
-
+        self.start_led_pub = self.create_publisher(Bool, "/grr/start_light", 10)
         
-        self.expected_nodes = ["/roboclaw_wrapper", "/controller_manager", "/isaac_hardware_interface", "/effort_controller", "/joint_state_broadcaster", "/grr_cmake_controller", "/grr/robot", "/grr/drivetrain", "/grr/gui", "/robot_state_publisher", "/odometry", "/State_Machine", "/grr/fake"]
+        
+        self.expected_nodes = ["/roboclaw_wrapper", "/controller_manager", "/isaac_hardware_interface", "/effort_controller", "/joint_state_broadcaster", "/grr_cmake_controller", "/grr/robot", "/grr/drivetrain", "/grr/gui", "/robot_state_publisher", "/odometry", "/State_Machine"]
         self.bind()
         
     def bind(self):
         self.window.start_button.clicked.connect(self.send_start)
         self.window.kill_motors_button.clicked.connect(self.kill_motor)
         self.window.reset_servos_button.clicked.connect(self.reset_servos)
+        self.window.bridge_button.clicked.connect(self.open_bridge)
+        self.window.start_without_light_button.clicked.connect(lambda:self.start_led_pub.publish(Bool(data=True)))
+        
+        
+    def open_bridge(self):
+        self.servo_pub.publish(self.bridge_command)
         
     def reset_servos(self):
         self.servo_pub.publish(self.reset_command)
         
     def kill_motor(self, checked):
-        self.window.kill_motors_button.setText(f"Drivetrain Goals: {'No ' if checked else 'Yes'}")
+        self.window.kill_motors_button.setText(f"Drive: \n{'Disabled' if checked else 'Enabled'}")
         self.drive_train_enable = not checked
         self.effort_pub.publish(Float64MultiArray(data=[0.0, 0.0]))
         self.raw_cmd.publish(Twist())
         self.drivetrain_enable.publish(Bool(data=not checked))
         
     def send_start(self, checked):
-        self.window.start_button.setText(f"Ready to Start? {'Yes' if checked else 'No '}")
+        self.window.start_button.setText(f"Ready: \n{'Yes' if checked else 'No'}")
         self.start_button_pub.publish(Bool(data=checked))
         
     def run_video(self, msg:Bool):

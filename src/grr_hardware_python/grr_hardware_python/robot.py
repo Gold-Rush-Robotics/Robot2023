@@ -73,7 +73,7 @@ class Robot(Node):
         self.relay = digitalio.DigitalInOut(board.D6)
         self.relay.direction = digitalio.Direction.OUTPUT
         
-        self.sensor_loop_timer = self.create_timer(1/40., self.sensor_loop)
+        self.sensor_loop_timer = self.create_timer(1/30., self.sensor_loop)
         
         self.back_sensor = TCS34725(self.tca[1])
         self.start_light_publisher = self.create_publisher(Bool, "/grr/start_light", 10) 
@@ -177,7 +177,6 @@ class Robot(Node):
         
     def sensor_loop(self):
         
-        gui_str = ""
         
         try:
             threshold = self.get_parameter('LED_Threshold').get_parameter_value().integer_value
@@ -193,7 +192,6 @@ class Robot(Node):
             tof_msg = LaserScan(range_min=.005,range_max=.1)
             tof_msg.ranges = [self.down_tof.range / 1000]
             self.down_tof_pub.publish(tof_msg)
-            gui_str += str(tof_msg.ranges) 
         except OSError as e:
             self.get_logger().warning(f"DOWN TOF FAILED {e}")
         
@@ -219,10 +217,7 @@ class Robot(Node):
             
             
         except OSError as e:
-            self.get_logger().warning(f"MAGNOMETER FAILED {e}")
-            
-        self.debug_pub.publish(String(data=gui_str))
-        
+            self.get_logger().warning(f"MAGNOMETER FAILED {e}")        
         
         # try:
         #     if self.left_tof.data_ready:
